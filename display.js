@@ -22,7 +22,16 @@ let currentMediaIndex = 0;
 let imageTimer = null;
 const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาที
 
-// ฟังก์ชันดึงราคาจาก API สมาคมค้าทองคำ (เสถียร ไม่โดนบล็อก)
+// ฟังก์ชันช่วยแปลงข้อความราคา ให้เป็นตัวเลขจำนวนเต็ม (ปัดเศษ) พร้อมใส่ลูกน้ำ
+function formatToIntegerPrice(priceStr) {
+    if (!priceStr) return "-";
+    // ลบลูกน้ำเดิมออกก่อนเพื่อแปลงเป็นตัวเลขคำนวณได้
+    const cleanStr = priceStr.toString().replace(/,/g, '');
+    const num = Math.round(parseFloat(cleanStr)); // แปลงเป็นตัวเลขและปัดเศษทศนิยม
+    return isNaN(num) ? "-" : num.toLocaleString('en-US'); // คืนค่ากลับพร้อมลูกน้ำหลักพัน
+}
+
+// ฟังก์ชันดึงราคาจาก API สมาคมค้าทองคำ
 async function fetchGoldTradersPrice() {
     try {
         const response = await fetch('https://api.chnwt.dev/thai-gold-api/latest');
@@ -32,12 +41,12 @@ async function fetchGoldTradersPrice() {
 
         const prices = data.response.price;
 
-        // ดึงราคาและตัด .00 ออกเพื่อให้ตัวเลขดูสวยงามขึ้น (ถ้ารับซื้อรูปพรรณมีเศษสตางค์จะคงไว้)
+        // นำราคาที่ได้มาผ่านฟังก์ชันตัดทศนิยมออกให้เป็นจำนวนเต็ม
         return {
-            barBuy: prices.gold_bar.buy.replace('.00', ''),
-            barSell: prices.gold_bar.sell.replace('.00', ''),
-            ornamentBuy: prices.gold.buy.replace('.00', ''),
-            ornamentSell: prices.gold.sell.replace('.00', '')
+            barBuy: formatToIntegerPrice(prices.gold_bar.buy),
+            barSell: formatToIntegerPrice(prices.gold_bar.sell),
+            ornamentBuy: formatToIntegerPrice(prices.gold.buy),
+            ornamentSell: formatToIntegerPrice(prices.gold.sell)
         };
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงราคาจาก API:", error);
@@ -128,7 +137,6 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
         if (config.isAutoMode) {
-            // ดึงราคา API ทันทีที่โหลด
             const goldPrice = await fetchGoldTradersPrice();
             if (goldPrice && goldPrice.barBuy !== "-") {
                 updateTextData({ ...config, ...goldPrice }); 
@@ -136,7 +144,6 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
                 updateTextData(config); 
             }
 
-            // ตั้งเวลารีเฟรชราคาใหม่ทุกๆ 1 นาที
             autoFetchInterval = setInterval(async () => {
                 const freshPrice = await fetchGoldTradersPrice();
                 if (freshPrice && freshPrice.barBuy !== "-") {
@@ -145,7 +152,13 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
             }, 60000);
 
         } else {
-            updateTextData(config);
+            // โหมดพิมพ์เอง (Manual) ถ้าต้องการให้บังคับเป็นจำนวนเต็มด้วย ให้เปิดใช้งานโค้ดนี้
+            const manualConfig = { ...config };
+            if (manualConfig.barBuy) manualConfig.barBuy = formatToIntegerPrice(manualConfig.barBuy);
+            if (manualConfig.barSell) manualConfig.barSell = formatToIntegerPrice(manualConfig.barSell);
+            if (manualConfig.ornamentBuy) manualConfig.ornamentBuy = formatToIntegerPrice(manualConfig.ornamentBuy);
+            if (manualConfig.ornamentSell) manualConfig.ornamentSell = formatToIntegerPrice(manualConfig.ornamentSell);
+            updateTextData(manualConfig);
         }
 
         managePlaylist(config.mediaUrl);
