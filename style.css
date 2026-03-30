@@ -25,7 +25,7 @@ body {
    ================================== */
 .sidebar {
     width: 38%; 
-    background-color: #72151a; /* สีแดงเข้มตามภาพ BKK Diamond */
+    background-color: #72151a; 
     display: flex;
     flex-direction: column;
     padding: 3vh 2.5vw;
@@ -37,7 +37,7 @@ body {
 /* โลโก้ */
 .logo-container {
     text-align: center;
-    margin-bottom: 3vh; 
+    margin-bottom: 2.5vh; 
     display: flex;
     justify-content: center; 
     align-items: center;    
@@ -49,25 +49,25 @@ body {
     display: block;  
 }
 
-/* หัวข้อราคาทอง ขยายใหญ่ขึ้น */
+/* หัวข้อราคาทอง */
 .gold-title {
     font-size: 2.5vw;
     font-weight: 600;
     color: #fce4ad; 
-    margin-bottom: 1vh;
+    margin-bottom: 1.5vh;
     text-align: left;
     padding-left: 0.5vw;
 }
 
-/* กล่องราคา ขยายให้ใหญ่และชัดเจน */
+/* กล่องราคา ปรับความสูงและความโค้งให้ใหญ่รับกับตัวเลข */
 .price-row {
     display: flex;
     width: 100%;
-    height: 8.5vh; /* เพิ่มความสูงกล่อง */
-    margin-bottom: 2vh;
-    border-radius: 15px; /* เพิ่มความโค้งมนแบบแคปซูล */
+    height: 11.5vh; /* ขยายความสูงกล่องจาก 8.5vh เป็น 11.5vh */
+    margin-bottom: 2.2vh; /* เพิ่มช่องไฟระหว่างกล่องนิดหน่อย */
+    border-radius: 20px; /* เพิ่มความโค้งมนให้สมดุลกับกรอบที่ใหญ่ขึ้น */
     overflow: hidden; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* เพิ่มเงาให้กล่องดูลอยเด่นขึ้น */
 }
 
 .price-label {
@@ -77,7 +77,7 @@ body {
     display: flex;
     align-items: center;
     padding-left: 2vw;
-    font-size: 2.2vw; /* ขยายขนาดฟอนต์คำว่ารับซื้อ/ขายออก */
+    font-size: 2.4vw; /* ขยายคำว่า รับซื้อ/ขายออก ให้เต็มกรอบ */
     font-weight: 700;
 }
 
@@ -89,7 +89,7 @@ body {
     align-items: center;
     justify-content: flex-end;
     padding-right: 2vw;
-    font-size: 4.5vw; /* ขยายขนาดตัวเลขให้ใหญ่เต็มตา */
+    font-size: 4.5vw; /* ขนาดตัวเลขใหญ่ชัดเจน */
     font-weight: 700;
     letter-spacing: 1px;
 }
@@ -97,7 +97,7 @@ body {
 /* กล่องแสดงเวลาอัพเดท */
 .update-time {
     margin-top: auto; 
-    font-size: 1.2vw; /* ขยายฟอนต์เวลา */
+    font-size: 1.2vw; 
     color: #fce4ad;
     font-weight: 300;
     text-align: center;
@@ -116,12 +116,11 @@ body {
     position: relative;
 }
 
-/* บังคับภาพและวิดีโอให้บีบพอดีกับกรอบ (fill) */
 .media-section img,
 .media-section video {
     width: 100%;
     height: 100%;
-    object-fit: fill !important; /* ยืดหดให้พอดีพื้นที่แบบเป๊ะๆ */
+    object-fit: fill !important; 
 }
 
 /* ==================================
