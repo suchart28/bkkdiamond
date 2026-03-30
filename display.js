@@ -2,8 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================
-// นำ URL Web App ของ Google Apps Script อันใหม่มาใส่ที่นี่ (ในเครื่องหมายคำพูด)
-const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbwhH0bfBoMtaaTP4eOb_UaVrIkPQjXXzKHr89iTxfCJyWYxJ0qvdPU9g_JD6xBTd50Y/exec";
+// 1. นำ URL Web App ของ Google Apps Script อันใหม่มาใส่ที่นี่ (ในเครื่องหมายคำพูด)
+const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbyHSXLS8Nf9kAvjaYIcSsdqUPb42_JGMCZbGPNmZf3t1r9-PW6pC1ZPcIUmLIep7OnJ/exec";
 // ==========================================
 
 const firebaseConfig = {
@@ -27,7 +27,7 @@ let currentMediaIndex = 0;
 let imageTimer = null;
 
 // ==========================================
-// การตั้งค่า Effect (ปรับได้ตรงนี้)
+// 2. การตั้งค่า Effect การเล่นสื่อ
 const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ (10 วินาที)
 const FADE_DURATION = 1000;   // เวลาในการเฟดเลือนหาย (1 วินาที)
 // ==========================================
@@ -90,17 +90,15 @@ async function fetchMediaFromDrive() {
         const files = await response.json();
         
         if (files && files.length > 0) {
-            // เช็คว่าเพลย์ลิสต์มีไฟล์อะไรอัปเดตไหม
+            // เช็คว่ามีไฟล์อัปเดตใหม่ไหม
             if (JSON.stringify(files) !== JSON.stringify(currentPlaylist)) {
                 currentPlaylist = files;
                 currentMediaIndex = 0;
-                // รีเซ็ต Fader Container
-                document.getElementById('media-container').innerHTML = '';
+                document.getElementById('media-container').innerHTML = ''; // รีเซ็ตหน้าจอ
                 playCurrentMedia();
             }
         } else {
             currentPlaylist = [];
-            // ถ้าโฟลเดอร์ว่างเปล่า แสดงรูปพื้นหลังค่าเริ่มต้น (ทันที ไม่เฟด)
             document.getElementById('media-container').innerHTML = `<img src="default-bg.jpg" style="width: 100%; height: 100%; object-fit: fill;">`;
         }
     } catch (error) {
@@ -108,7 +106,7 @@ async function fetchMediaFromDrive() {
     }
 }
 
-// ฟังก์ชันหลักในการเล่นสื่อ พร้อม Cross-fade Effect สำหรับรูปภาพ
+// ฟังก์ชันหลักในการเล่นสื่อ (Cross-fade สำหรับภาพ & บังคับเล่นสำหรับวิดีโอ)
 function playCurrentMedia() {
     const mediaContainer = document.getElementById('media-container');
 
@@ -119,106 +117,111 @@ function playCurrentMedia() {
     
     clearTimeout(imageTimer);
     
-    // ถ้ารันจนจบเพลย์ลิสต์ ให้กลับไปเริ่มไฟล์แรกใหม่
+    // ถ้ารันจนจบ ให้กลับไปเริ่มไฟล์แรกใหม่
     if (currentMediaIndex >= currentPlaylist.length) {
         currentMediaIndex = 0; 
     }
 
     const currentFile = currentPlaylist[currentMediaIndex];
 
-    // โหมดวิดีโอ: ใช้การสลับ HTML ตรงๆ (ไม่มีเฟด) เพื่อความเสถียรของ Video Element
+    // ==========================================
+    // โหมดวิดีโอ: สร้าง Element ใหม่และบังคับ Play
+    // ==========================================
     if (currentFile.type === 'video') {
-        // ลบ fader images ตัวเก่าๆ ออกก่อน
-        const oldImages = mediaContainer.querySelectorAll('img.fader-img');
-        oldImages.forEach(img => img.remove());
+        // ลบ fader images หรือวิดีโอตัวเก่าออกให้หมดก่อน
+        mediaContainer.innerHTML = ''; 
 
-        mediaContainer.innerHTML = `
-            <video id="signage-video" src="${currentFile.url}" 
-                   autoplay muted playsinline
-                   style="width: 100%; height: 100%; object-fit: fill;">
-            </video>`;
-        
-        const videoEl = document.getElementById('signage-video');
-        
+        // สร้าง Video Element
+        const videoEl = document.createElement('video');
+        videoEl.id = 'signage-video';
+        videoEl.src = currentFile.url;
+        videoEl.autoplay = true;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.style.cssText = "width: 100%; height: 100%; object-fit: fill; background-color: #000;";
+
+        // เมื่อเล่นจบให้ไปไฟล์ถัดไป
         videoEl.onended = () => {
             currentMediaIndex++;
             playCurrentMedia();
         };
-        
+
+        // ถ้าเล่นไม่ได้ ให้ข้ามทันที
         videoEl.onerror = () => {
-            console.error(`ข้ามไฟล์วิดีโอ ${currentFile.name} เนื่องจากไม่สามารถเล่นได้`);
+            console.error(`ข้ามไฟล์วิดีโอ ${currentFile.name} เนื่องจากไม่สามารถโหลดจาก Drive ได้`);
             currentMediaIndex++;
             playCurrentMedia();
         };
+
+        mediaContainer.appendChild(videoEl);
+
+        // บังคับให้เบราว์เซอร์เล่นวิดีโอทันทีเพื่อทะลวงระบบบล็อก
+        let playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error("เบราว์เซอร์บล็อกการเล่นวิดีโออัตโนมัติ:", error);
+                // ถ้าโดนบล็อก ให้ข้ามไปไฟล์ถัดไป เพื่อไม่ให้จอค้าง
+                currentMediaIndex++;
+                playCurrentMedia();
+            });
+        }
         
     } 
+    // ==========================================
     // โหมดรูปภาพ: ใช้ระบบ Fader ซ้อนรูป
+    // ==========================================
     else {
-        // ตรวจสอบว่า Container พร้อมสำหรับการซ้อนภาพหรือยัง (ต้องเป็น relative)
         if (mediaContainer.style.position !== 'relative') {
             mediaContainer.style.position = 'relative';
         }
 
-        // 1. ค้นหาภาพปัจจุบันที่กำลังแสดงผลอยู่
         const existingImg = mediaContainer.querySelector('img.active-fader-img');
 
-        // 2. สร้าง Image Element อันใหม่ (hidden รอ)
+        // สร้างรูปภาพใหม่รอไว้แบบซ่อน
         const nextImg = document.createElement('img');
         nextImg.src = currentFile.url;
         nextImg.alt = "Signage Media";
-        nextImg.className = "fader-img"; // คลาสสำหรับระบุว่าเป็น fader
-        // ตั้งค่าสไตล์สำหรับการเฟด (เริ่มด้วย opacity 0)
+        nextImg.className = "fader-img"; 
         nextImg.style.cssText = `position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: fill; opacity: 0; transition: opacity ${FADE_DURATION}ms ease-in-out;`;
 
-        // รอจนกว่าภาพใหม่จะโหลดเสร็จ เพื่อป้องกันอาการกระตุกหรือจอดำ
         nextImg.onload = () => {
             if (existingImg) {
-                // --- ขั้นตอนการทำ Cross-fade ---
-                
-                // วางภาพใหม่ซ้อนด้านล่างก่อนเพื่อไม่ให้บังภาพปัจจุบัน
+                // วางภาพใหม่ซ้อนลงไป
                 nextImg.style.zIndex = "1";
                 mediaContainer.appendChild(nextImg);
 
-                // สลับ z-index: ให้ภาพเก่าอยู่ล่าง ภาพใหม่อยู่บน
+                // สลับ z-index
                 existingImg.style.zIndex = "1";
                 nextImg.style.zIndex = "2";
 
-                // บังคับให้เบราว์เซอร์ reflow ก่อนจะเริ่มทรานซิชัน
-                void nextImg.offsetWidth;
+                void nextImg.offsetWidth; // บังคับให้เบราว์เซอร์อัปเดต
 
-                // สั่งเฟด: ภาพใหม่ปรากฏ, ภาพเก่าเลือนหาย
+                // เฟดภาพเข้า-ออก
                 nextImg.style.opacity = "1";
                 existingImg.style.opacity = "0";
                 
-                // เปลี่ยนคลาสเพื่อระบุว่าภาพใหม่กลายเป็นภาพปัจจุบันแล้ว
                 existingImg.classList.remove('active-fader-img');
                 nextImg.classList.add('active-fader-img');
 
-                // รอจนกว่าทรานซิชันเฟดจะเสร็จ ค่อยลบภาพเก่าออกไป
+                // ลบภาพเก่าออกเมื่อเฟดเสร็จ
                 setTimeout(() => {
                     existingImg.remove();
                 }, FADE_DURATION);
 
             } else {
-                // --- กรณีโหลดภาพครั้งแรก หรือเปลี่ยนมาจากโหมดวิดีโอ ---
-                
-                // เคลียร์ Container ให้สะอาด (ลบวิดีโอออก)
                 mediaContainer.innerHTML = ''; 
-                
-                // แสดงภาพใหม่ทันที (ไม่ต้องเฟด)
                 nextImg.style.opacity = "1";
                 nextImg.classList.add('active-fader-img');
                 mediaContainer.appendChild(nextImg);
             }
 
-            // ตั้งเวลาถอยหลังสำหรับการเปลี่ยนไฟล์ถัดไป
+            // ตั้งเวลาถอยหลังเปลี่ยนภาพ
             imageTimer = setTimeout(() => {
                 currentMediaIndex++;
                 playCurrentMedia();
-            }, IMAGE_DURATION);
+            }, IMAGE_DURATION); 
         };
         
-        // ถ้าโหลดรูปภาพไม่ขึ้น ให้ข้ามภาพนี้ไปเลย
         nextImg.onerror = () => {
             console.error(`ข้ามไฟล์ภาพ ${currentFile.name} เนื่องจากโหลดไม่ได้`);
             currentMediaIndex++;
