@@ -3,7 +3,7 @@ import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasej
 
 // ==========================================
 // 1. นำ URL Web App ของ Google Apps Script อันใหม่มาใส่ที่นี่ (ในเครื่องหมายคำพูด)
-const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbyHSXLS8Nf9kAvjaYIcSsdqUPb42_JGMCZbGPNmZf3t1r9-PW6pC1ZPcIUmLIep7OnJ/exec";
+const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbyztullebdjy4OLL7S_TcPxGHBKcL87F9otfRKCRLXn2KPRxzz4o-s2wEdshYQG7tw5/exec";
 // ==========================================
 
 const firebaseConfig = {
