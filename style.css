@@ -1,4 +1,3 @@
-/* รีเซ็ตค่าเริ่มต้น */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -8,17 +7,16 @@
 body {
     font-family: 'Kanit', sans-serif;
     background-color: #fff; 
-    overflow: hidden; /* ซ่อนสกรอลบาร์ */
+    overflow: hidden; 
     display: flex;
     flex-direction: column;
     height: 100vh;
 }
 
-/* แบ่งหน้าจอส่วนบน (92%) สำหรับเนื้อหาหลัก */
 .layout-wrapper {
     display: flex;
     flex-direction: row;
-    height: 92vh; 
+    height: 90vh; /* ความสูงส่วนบน */
     width: 100%;
 }
 
@@ -26,8 +24,8 @@ body {
    ส่วนที่ 1: แถบราคาทอง (ด้านซ้าย)
    ================================== */
 .sidebar {
-    width: 38%; /* สัดส่วนความกว้างตามภาพ */
-    background-color: #611319; /* สีแดงเข้มตามภาพอ้างอิง */
+    width: 38%; 
+    background-color: #72151a; /* สีแดงเข้มตามภาพ BKK Diamond */
     display: flex;
     flex-direction: column;
     padding: 3vh 2.5vw;
@@ -36,72 +34,74 @@ body {
     z-index: 10;
 }
 
-/* โลโก้ (แก้ไขเพื่อจัดวางภาพ logo.png) */
+/* โลโก้ */
 .logo-container {
     text-align: center;
-    margin-bottom: 4vh; /* เว้นระยะห่างด้านล่างของโลโก้ */
+    margin-bottom: 3vh; 
     display: flex;
-    justify-content: center; /* จัดกึ่งกลางแนวนอน */
-    align-items: center;     /* จัดกึ่งกลางแนวตั้ง (เผื่อพื้นที่โลโก้สูงไม่เท่ากัน) */
+    justify-content: center; 
+    align-items: center;    
 }
 
-/* ตั้งค่าขนาดภาพโลโก้ main-logo */
 .main-logo {
-    max-width: 80%; /* จำกัดความกว้างไม่ให้เต็มSidebarเกินไป ปรับเพิ่ม/ลดได้ตามชอบ */
-    height: auto;    /* คงสัดส่วนภาพอัตโนมัติ */
-    display: block;  /* ป้องกันช่องว่างด้านล่างภาพ */
-}
-/* หัวข้อราคาทอง */
-.gold-title {
-    font-size: 2.2vw;
-    font-weight: 600;
-    color: #fce4ad; /* สีครีมทอง */
-    margin-bottom: 1.5vh;
-    text-align: center;
+    max-width: 65%; 
+    height: auto;    
+    display: block;  
 }
 
-/* กล่องราคาแบบแคปซูล */
+/* หัวข้อราคาทอง ขยายใหญ่ขึ้น */
+.gold-title {
+    font-size: 2.5vw;
+    font-weight: 600;
+    color: #fce4ad; 
+    margin-bottom: 1vh;
+    text-align: left;
+    padding-left: 0.5vw;
+}
+
+/* กล่องราคา ขยายให้ใหญ่และชัดเจน */
 .price-row {
     display: flex;
     width: 100%;
-    height: 7.5vh;
-    margin-bottom: 1.5vh;
-    border-radius: 12px; /* ขอบมน */
-    overflow: hidden; /* ตัดส่วนเกินที่มุมมน */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    height: 8.5vh; /* เพิ่มความสูงกล่อง */
+    margin-bottom: 2vh;
+    border-radius: 15px; /* เพิ่มความโค้งมนแบบแคปซูล */
+    overflow: hidden; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .price-label {
-    width: 30%; /* แถบสีทองด้านซ้าย */
-    background: linear-gradient(to bottom, #f2dbac, #dfb974); /* ไล่สีทอง */
+    width: 35%; 
+    background: linear-gradient(to bottom, #fef1cc, #dfb974); 
     color: #000;
     display: flex;
     align-items: center;
-    padding-left: 1.5vw;
-    font-size: 1.8vw;
+    padding-left: 2vw;
+    font-size: 2.2vw; /* ขยายขนาดฟอนต์คำว่ารับซื้อ/ขายออก */
     font-weight: 700;
 }
 
 .price-value {
-    width: 70%; /* แถบสีขาวด้านขวา */
+    width: 65%; 
     background-color: #ffffff;
     color: #000;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 1.5vw;
-    font-size: 3vw;
+    padding-right: 2vw;
+    font-size: 4.5vw; /* ขยายขนาดตัวเลขให้ใหญ่เต็มตา */
     font-weight: 700;
+    letter-spacing: 1px;
 }
 
-/* กล่องแสดงเวลาอัพเดทด้านล่างสุด */
+/* กล่องแสดงเวลาอัพเดท */
 .update-time {
-    margin-top: auto; /* ดันข้อความนี้ลงไปชิดด้านล่างสุดของแถบแดง */
-    font-size: 1vw;
+    margin-top: auto; 
+    font-size: 1.2vw; /* ขยายฟอนต์เวลา */
     color: #fce4ad;
     font-weight: 300;
     text-align: center;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 /* ==================================
@@ -109,29 +109,31 @@ body {
    ================================== */
 .media-section {
     width: 62%;
-    background-color: #f4f4f4; /* สีพื้นหลังเผื่อรูปโหลดไม่ขึ้น */
+    background-color: #000; 
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
 }
+
+/* บังคับภาพและวิดีโอให้บีบพอดีกับกรอบ (fill) */
 .media-section img,
 .media-section video {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* จัดภาพให้เต็มพื้นที่ */
+    object-fit: fill !important; /* ยืดหดให้พอดีพื้นที่แบบเป๊ะๆ */
 }
 
 /* ==================================
    ส่วนที่ 3: แถบตัววิ่ง (ด้านล่าง)
    ================================== */
 .marquee-section {
-    height: 8vh; /* ความสูงแถบด้านล่าง */
-    background-color: #d80000; /* สีแดงสด ตามภาพ */
+    height: 10vh; 
+    background-color: #d80000; 
     color: #ffffff;
     display: flex;
     align-items: center;
-    font-size: 3.5vh;
+    font-size: 4vh;
     font-weight: 500;
     z-index: 10;
 }
