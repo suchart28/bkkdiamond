@@ -7,127 +7,138 @@
 
 body {
     font-family: 'Kanit', sans-serif;
-    background-color: #000;
-    color: #fff;
+    background-color: #fff; 
+    overflow: hidden; /* ซ่อนสกรอลบาร์ */
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
 }
 
-/* จัดกลุ่มซ้าย-ขวา */
-.main-content {
+/* แบ่งหน้าจอส่วนบน (92%) สำหรับเนื้อหาหลัก */
+.layout-wrapper {
     display: flex;
     flex-direction: row;
-    height: 90vh; /* ใช้พื้นที่ 90% ของความสูงจอ */
+    height: 92vh; 
     width: 100%;
 }
 
 /* ==================================
-   ส่วนที่ 1: ราคาทอง (ด้านซ้าย) 
+   ส่วนที่ 1: แถบราคาทอง (ด้านซ้าย)
    ================================== */
-.price-section {
-    width: 40%; /* ใช้พื้นที่ความกว้าง 40% */
-    background: linear-gradient(135deg, #6d1b22 0%, #a82a35 100%);
+.sidebar {
+    width: 38%; /* สัดส่วนความกว้างตามภาพ */
+    background-color: #611319; /* สีแดงเข้มตามภาพอ้างอิง */
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 0 3vw;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+    padding: 3vh 2.5vw;
+    color: #fff;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.4);
     z-index: 10;
 }
 
-.header-title {
+/* โลโก้ */
+.logo-container {
     text-align: center;
-    font-size: 3.5vw;
-    font-weight: 700;
-    color: #ffd700;
-    margin-bottom: 3vh;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin-bottom: 4vh;
 }
-
-.gold-type-title {
+.logo-container img {
+    max-width: 60%;
+    height: auto;
+}
+.logo-text {
     font-size: 2vw;
-    font-weight: 500;
-    color: #ffffff;
-    margin-bottom: 1vh;
-    border-left: 4px solid #ffd700;
-    padding-left: 1vw;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+}
+.logo-text small {
+    font-size: 0.8vw;
+    font-weight: 300;
+    letter-spacing: 1px;
 }
 
-.price-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5vw;
-    margin-bottom: 3vh;
-}
-
-.price-box {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    border-radius: 8px;
-    padding: 1.5vh;
+/* หัวข้อราคาทอง */
+.gold-title {
+    font-size: 2.2vw;
+    font-weight: 600;
+    color: #fce4ad; /* สีครีมทอง */
+    margin-bottom: 1.5vh;
     text-align: center;
+}
+
+/* กล่องราคาแบบแคปซูล */
+.price-row {
+    display: flex;
+    width: 100%;
+    height: 7.5vh;
+    margin-bottom: 1.5vh;
+    border-radius: 12px; /* ขอบมน */
+    overflow: hidden; /* ตัดส่วนเกินที่มุมมน */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .price-label {
-    font-size: 1.2vw;
-    color: #f1f1f1;
-    margin-bottom: 0.5vh;
+    width: 30%; /* แถบสีทองด้านซ้าย */
+    background: linear-gradient(to bottom, #f2dbac, #dfb974); /* ไล่สีทอง */
+    color: #000;
+    display: flex;
+    align-items: center;
+    padding-left: 1.5vw;
+    font-size: 1.8vw;
+    font-weight: 700;
 }
 
 .price-value {
-    font-size: 2.5vw;
-    font-weight: 600;
-    color: #00ff66;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    width: 70%; /* แถบสีขาวด้านขวา */
+    background-color: #ffffff;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 1.5vw;
+    font-size: 3vw;
+    font-weight: 700;
 }
 
-.sell-value {
-    color: #ff3333;
-}
-
+/* กล่องแสดงเวลาอัพเดทด้านล่างสุด */
 .update-time {
-    text-align: center;
+    margin-top: auto; /* ดันข้อความนี้ลงไปชิดด้านล่างสุดของแถบแดง */
     font-size: 1vw;
-    color: #e0e0e0;
+    color: #fce4ad;
     font-weight: 300;
-    margin-top: 1vh;
+    text-align: center;
+    opacity: 0.8;
 }
 
 /* ==================================
-   ส่วนที่ 2: สื่อโฆษณา (ด้านขวา) 
+   ส่วนที่ 2: พื้นที่สื่อ (ด้านขวา)
    ================================== */
 .media-section {
-    width: 60%; /* ใช้พื้นที่ความกว้าง 60% */
-    background-color: #111;
-    position: relative;
+    width: 62%;
+    background-color: #f4f4f4; /* สีพื้นหลังเผื่อรูปโหลดไม่ขึ้น */
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
-
-.media-section img, 
+.media-section img,
 .media-section video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover; /* จัดภาพให้เต็มพื้นที่ */
 }
 
 /* ==================================
-   ส่วนที่ 3: ข้อความตัววิ่ง (ด้านล่าง) 
+   ส่วนที่ 3: แถบตัววิ่ง (ด้านล่าง)
    ================================== */
 .marquee-section {
-    height: 10vh; /* ใช้พื้นที่ 10% ของความสูงจอ */
-    background: linear-gradient(to bottom, #d4af37, #aa8222);
-    color: #4a0000;
+    height: 8vh; /* ความสูงแถบด้านล่าง */
+    background-color: #d80000; /* สีแดงสด ตามภาพ */
+    color: #ffffff;
     display: flex;
     align-items: center;
-    font-size: 4vh;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    font-size: 3.5vh;
+    font-weight: 500;
     z-index: 10;
 }
 
