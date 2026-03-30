@@ -25,7 +25,12 @@ const branchId = urlParams.get('branch') || '1';
 let currentPlaylist = [];
 let currentMediaIndex = 0;
 let imageTimer = null;
-const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาทีต่อรูป
+
+// ==========================================
+// การตั้งค่า Effect (ปรับได้ตรงนี้)
+const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ (10 วินาที)
+const FADE_DURATION = 1000;   // เวลาในการเฟดเลือนหาย (1 วินาที)
+// ==========================================
 
 // ฟังก์ชันแปลงตัวเลขเป็นจำนวนเต็มพร้อมใส่ลูกน้ำ
 function formatToIntegerPrice(priceStr) {
@@ -44,7 +49,6 @@ async function fetchGoldTradersPrice() {
 
         const prices = data.response.price;
         
-        // จัดการวันที่ (แก้ปัญหา undefined)
         let updateDate = data.response.date;
         if (!updateDate || updateDate === "undefined") {
             const today = new Date();
@@ -54,7 +58,6 @@ async function fetchGoldTradersPrice() {
             if (!isNaN(d)) updateDate = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
         }
         
-        // ดึงเวลาอัพเดท
         const updateTime = data.response.update_time || new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
         return {
@@ -62,7 +65,6 @@ async function fetchGoldTradersPrice() {
             barSell: formatToIntegerPrice(prices.gold_bar.sell),
             ornamentBuy: formatToIntegerPrice(prices.gold.buy),
             ornamentSell: formatToIntegerPrice(prices.gold.sell),
-            // ตัดคำว่า " น." ออกตามที่คุณต้องการ
             updateTime: `อัพเดทราคาล่าสุด: วันที่ ${updateDate} เวลา ${updateTime}`
         };
     } catch (error) {
@@ -88,15 +90,17 @@ async function fetchMediaFromDrive() {
         const files = await response.json();
         
         if (files && files.length > 0) {
-            // เช็คว่าเพลย์ลิสต์มีไฟล์อะไรอัปเดตไหม (ถ้ามีไฟล์เพิ่ม/ลด ให้เริ่มเล่นใหม่)
+            // เช็คว่าเพลย์ลิสต์มีไฟล์อะไรอัปเดตไหม
             if (JSON.stringify(files) !== JSON.stringify(currentPlaylist)) {
                 currentPlaylist = files;
                 currentMediaIndex = 0;
+                // รีเซ็ต Fader Container
+                document.getElementById('media-container').innerHTML = '';
                 playCurrentMedia();
             }
         } else {
-            // ถ้าโฟลเดอร์ว่างเปล่า ให้แสดงรูปพื้นหลังค่าเริ่มต้น
             currentPlaylist = [];
+            // ถ้าโฟลเดอร์ว่างเปล่า แสดงรูปพื้นหลังค่าเริ่มต้น (ทันที ไม่เฟด)
             document.getElementById('media-container').innerHTML = `<img src="default-bg.jpg" style="width: 100%; height: 100%; object-fit: fill;">`;
         }
     } catch (error) {
@@ -104,10 +108,12 @@ async function fetchMediaFromDrive() {
     }
 }
 
-// ฟังก์ชันเล่นไฟล์สื่อ (ภาพ/วิดีโอ) และจัดการปัญหาจอดำ
+// ฟังก์ชันหลักในการเล่นสื่อ พร้อม Cross-fade Effect สำหรับรูปภาพ
 function playCurrentMedia() {
+    const mediaContainer = document.getElementById('media-container');
+
     if (currentPlaylist.length === 0) {
-        document.getElementById('media-container').innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; color:#fff; font-size:2vw;">กำลังโหลดสื่อ หรือไม่พบไฟล์...</div>`;
+        mediaContainer.innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; color:#fff; font-size:2vw;">กำลังโหลดสื่อ หรือไม่พบไฟล์...</div>`;
         return;
     }
     
@@ -119,10 +125,13 @@ function playCurrentMedia() {
     }
 
     const currentFile = currentPlaylist[currentMediaIndex];
-    const mediaContainer = document.getElementById('media-container');
 
-    // เลือกว่าจะแสดง Video หรือ Image ตามประเภทไฟล์ที่ API ส่งมาให้
+    // โหมดวิดีโอ: ใช้การสลับ HTML ตรงๆ (ไม่มีเฟด) เพื่อความเสถียรของ Video Element
     if (currentFile.type === 'video') {
+        // ลบ fader images ตัวเก่าๆ ออกก่อน
+        const oldImages = mediaContainer.querySelectorAll('img.fader-img');
+        oldImages.forEach(img => img.remove());
+
         mediaContainer.innerHTML = `
             <video id="signage-video" src="${currentFile.url}" 
                    autoplay muted playsinline
@@ -131,38 +140,87 @@ function playCurrentMedia() {
         
         const videoEl = document.getElementById('signage-video');
         
-        // เมื่อเล่นวิดีโอจบ ให้เล่นไฟล์ถัดไป
         videoEl.onended = () => {
             currentMediaIndex++;
             playCurrentMedia();
         };
         
-        // ถ้าโหลดวิดีโอไม่ได้ (ไฟล์ใหญ่ไป หรือลิงก์เสีย) ให้ข้ามไปไฟล์ถัดไปทันที
         videoEl.onerror = () => {
             console.error(`ข้ามไฟล์วิดีโอ ${currentFile.name} เนื่องจากไม่สามารถเล่นได้`);
             currentMediaIndex++;
             playCurrentMedia();
         };
         
-    } else {
-        mediaContainer.innerHTML = `
-            <img id="signage-img" src="${currentFile.url}" 
-                 style="width: 100%; height: 100%; object-fit: fill;" 
-                 alt="Signage Media">`;
-                 
-        const imgEl = document.getElementById('signage-img');
-        
-        // เมื่อโหลดรูปภาพสำเร็จ ให้นับเวลาถอยหลังเพื่อเปลี่ยนภาพ
-        imgEl.onload = () => {
+    } 
+    // โหมดรูปภาพ: ใช้ระบบ Fader ซ้อนรูป
+    else {
+        // ตรวจสอบว่า Container พร้อมสำหรับการซ้อนภาพหรือยัง (ต้องเป็น relative)
+        if (mediaContainer.style.position !== 'relative') {
+            mediaContainer.style.position = 'relative';
+        }
+
+        // 1. ค้นหาภาพปัจจุบันที่กำลังแสดงผลอยู่
+        const existingImg = mediaContainer.querySelector('img.active-fader-img');
+
+        // 2. สร้าง Image Element อันใหม่ (hidden รอ)
+        const nextImg = document.createElement('img');
+        nextImg.src = currentFile.url;
+        nextImg.alt = "Signage Media";
+        nextImg.className = "fader-img"; // คลาสสำหรับระบุว่าเป็น fader
+        // ตั้งค่าสไตล์สำหรับการเฟด (เริ่มด้วย opacity 0)
+        nextImg.style.cssText = `position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: fill; opacity: 0; transition: opacity ${FADE_DURATION}ms ease-in-out;`;
+
+        // รอจนกว่าภาพใหม่จะโหลดเสร็จ เพื่อป้องกันอาการกระตุกหรือจอดำ
+        nextImg.onload = () => {
+            if (existingImg) {
+                // --- ขั้นตอนการทำ Cross-fade ---
+                
+                // วางภาพใหม่ซ้อนด้านล่างก่อนเพื่อไม่ให้บังภาพปัจจุบัน
+                nextImg.style.zIndex = "1";
+                mediaContainer.appendChild(nextImg);
+
+                // สลับ z-index: ให้ภาพเก่าอยู่ล่าง ภาพใหม่อยู่บน
+                existingImg.style.zIndex = "1";
+                nextImg.style.zIndex = "2";
+
+                // บังคับให้เบราว์เซอร์ reflow ก่อนจะเริ่มทรานซิชัน
+                void nextImg.offsetWidth;
+
+                // สั่งเฟด: ภาพใหม่ปรากฏ, ภาพเก่าเลือนหาย
+                nextImg.style.opacity = "1";
+                existingImg.style.opacity = "0";
+                
+                // เปลี่ยนคลาสเพื่อระบุว่าภาพใหม่กลายเป็นภาพปัจจุบันแล้ว
+                existingImg.classList.remove('active-fader-img');
+                nextImg.classList.add('active-fader-img');
+
+                // รอจนกว่าทรานซิชันเฟดจะเสร็จ ค่อยลบภาพเก่าออกไป
+                setTimeout(() => {
+                    existingImg.remove();
+                }, FADE_DURATION);
+
+            } else {
+                // --- กรณีโหลดภาพครั้งแรก หรือเปลี่ยนมาจากโหมดวิดีโอ ---
+                
+                // เคลียร์ Container ให้สะอาด (ลบวิดีโอออก)
+                mediaContainer.innerHTML = ''; 
+                
+                // แสดงภาพใหม่ทันที (ไม่ต้องเฟด)
+                nextImg.style.opacity = "1";
+                nextImg.classList.add('active-fader-img');
+                mediaContainer.appendChild(nextImg);
+            }
+
+            // ตั้งเวลาถอยหลังสำหรับการเปลี่ยนไฟล์ถัดไป
             imageTimer = setTimeout(() => {
                 currentMediaIndex++;
                 playCurrentMedia();
             }, IMAGE_DURATION);
         };
         
-        // ถ้าโหลดรูปภาพไม่ขึ้น (ติดสิทธิ์การเข้าถึง หรือลิงก์พัง) ให้ข้ามภาพนี้ไปเลย
-        imgEl.onerror = () => {
-            console.error(`ข้ามไฟล์ภาพ ${currentFile.name} เนื่องจากโหลดไม่ได้ (ลองเช็กสิทธิ์แชร์โฟลเดอร์)`);
+        // ถ้าโหลดรูปภาพไม่ขึ้น ให้ข้ามภาพนี้ไปเลย
+        nextImg.onerror = () => {
+            console.error(`ข้ามไฟล์ภาพ ${currentFile.name} เนื่องจากโหลดไม่ได้`);
             currentMediaIndex++;
             playCurrentMedia();
         };
@@ -172,7 +230,7 @@ function playCurrentMedia() {
 // สั่งให้ดึงภาพจาก Drive ทันทีที่เปิดหน้าเว็บ
 fetchMediaFromDrive();
 
-// ตั้งเวลาเช็กไฟล์ใน Drive ใหม่ทุกๆ 5 นาที (เผื่อมีคนโยนไฟล์ใหม่เข้าไป)
+// ตั้งเวลาเช็กไฟล์ใน Drive ใหม่ทุกๆ 5 นาที
 setInterval(fetchMediaFromDrive, 300000); 
 
 let autoFetchInterval = null;
@@ -185,7 +243,6 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
         if (config.isAutoMode) {
-            // ดึงราคาจากสมาคมทันทีที่โหลด
             const goldPrice = await fetchGoldTradersPrice();
             if (goldPrice && goldPrice.barBuy !== "-") {
                 updateTextData({ ...config, ...goldPrice }); 
@@ -193,7 +250,6 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
                 updateTextData(config); 
             }
 
-            // ตั้งเวลาอัปเดตราคาใหม่ทุกๆ 1 นาที
             autoFetchInterval = setInterval(async () => {
                 const freshPrice = await fetchGoldTradersPrice();
                 if (freshPrice && freshPrice.barBuy !== "-") {
@@ -202,14 +258,12 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
             }, 60000);
 
         } else {
-            // โหมดพิมพ์เอง (Manual)
             const manualConfig = { ...config };
             if (manualConfig.barBuy) manualConfig.barBuy = formatToIntegerPrice(manualConfig.barBuy);
             if (manualConfig.barSell) manualConfig.barSell = formatToIntegerPrice(manualConfig.barSell);
             if (manualConfig.ornamentBuy) manualConfig.ornamentBuy = formatToIntegerPrice(manualConfig.ornamentBuy);
             if (manualConfig.ornamentSell) manualConfig.ornamentSell = formatToIntegerPrice(manualConfig.ornamentSell);
             
-            // จัดการเวลาที่แอดมินกดบันทึก
             if (config.updatedAt) {
                 const d = config.updatedAt.toDate();
                 const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -222,7 +276,5 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
             updateTextData(manualConfig);
         }
 
-    } else {
-        document.getElementById('marquee-text').innerText = "รอการตั้งค่าตัววิ่งจากแอดมินสำหรับสาขา " + branchId;
     }
 });
