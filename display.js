@@ -1,6 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// ==========================================
+// 1. นำ URL Web App ของ Google Apps Script มาใส่ที่นี่ (ในเครื่องหมายคำพูด)
+const GOOGLE_DRIVE_API_URL = "ใส่_URL_WEB_APP_ที่ได้จากขั้นตอนที่_3_ที่นี่";
+// ==========================================
+
 const firebaseConfig = {
   apiKey: "AIzaSyDMMwciq6QoLSaWK6xfdr0U3ynyahtoaSk",
   authDomain: "studio-a33fe.firebaseapp.com",
@@ -29,7 +34,6 @@ function formatToIntegerPrice(priceStr) {
     return isNaN(num) ? "-" : num.toLocaleString('en-US');
 }
 
-// ฟังก์ชันดึงราคาและจัดการวันที่
 async function fetchGoldTradersPrice() {
     try {
         const response = await fetch('https://api.chnwt.dev/thai-gold-api/latest');
@@ -39,7 +43,6 @@ async function fetchGoldTradersPrice() {
 
         const prices = data.response.price;
         
-        // จัดการวันที่
         let updateDate = data.response.date;
         if (!updateDate || updateDate === "undefined") {
             const today = new Date();
@@ -51,7 +54,6 @@ async function fetchGoldTradersPrice() {
             }
         }
 
-        // ดึงเวลาอัพเดท (API จะมีคำว่า (ครั้งที่ X) มาให้แล้ว)
         const updateTime = data.response.update_time || new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
         return {
@@ -59,7 +61,6 @@ async function fetchGoldTradersPrice() {
             barSell: formatToIntegerPrice(prices.gold_bar.sell),
             ornamentBuy: formatToIntegerPrice(prices.gold.buy),
             ornamentSell: formatToIntegerPrice(prices.gold.sell),
-            // เอา " น." ออกจากบรรทัดนี้แล้ว
             updateTime: `อัพเดทราคาล่าสุด: วันที่ ${updateDate} เวลา ${updateTime}`
         };
     } catch (error) {
@@ -73,13 +74,25 @@ function updateTextData(data) {
     if(data.barSell !== undefined) document.getElementById('bar-sell').innerText = data.barSell;
     if(data.ornamentBuy !== undefined) document.getElementById('ornament-buy').innerText = data.ornamentBuy;
     if(data.ornamentSell !== undefined) document.getElementById('ornament-sell').innerText = data.ornamentSell;
-    
-    if (data.marquee !== undefined) {
-        document.getElementById('marquee-text').innerText = data.marquee;
-    }
+    if (data.marquee !== undefined) document.getElementById('marquee-text').innerText = data.marquee;
+    if (data.updateTime !== undefined) document.getElementById('update-time').innerText = data.updateTime;
+}
 
-    if (data.updateTime !== undefined) {
-        document.getElementById('update-time').innerText = data.updateTime;
+// ฟังก์ชันดึงไฟล์จาก Google Drive
+async function fetchMediaFromDrive() {
+    try {
+        const response = await fetch(GOOGLE_DRIVE_API_URL);
+        const files = await response.json();
+        
+        if (files.length > 0) {
+            // นำลิงก์จาก Drive มาต่อกันด้วยลูกน้ำ
+            const urls = files.map(f => f.url).join(',');
+            managePlaylist(urls);
+        } else {
+            managePlaylist(""); // ถ้าไม่มีไฟล์เลย
+        }
+    } catch (error) {
+        console.error("ไม่สามารถดึงภาพจาก Google Drive ได้", error);
     }
 }
 
@@ -111,42 +124,54 @@ function playCurrentMedia() {
 
     const currentFile = currentPlaylist[currentMediaIndex];
     const mediaContainer = document.getElementById('media-container');
-    const urlStr = currentFile.toLowerCase();
 
-    if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm')) {
-        mediaContainer.innerHTML = `
-            <video id="signage-video" src="${currentFile}" 
-                   autoplay muted playsinline
-                   style="width: 100%; height: 100%; object-fit: fill;">
-            </video>`;
-        
-        const videoEl = document.getElementById('signage-video');
-        
-        videoEl.onended = () => {
-            currentMediaIndex++;
-            playCurrentMedia();
-        };
-        
-        videoEl.onerror = () => {
-            currentMediaIndex++;
-            playCurrentMedia();
-        };
+    // ตรวจสอบจาก URL ว่าเป็นวิดีโอหรือไม่ (Drive API อาจไม่ระบุ .mp4 ชัดเจนใน URL)
+    // แต่เราจะให้เล่นวิดีโอถ้ามันโหลดเป็นภาพไม่ได้
+    mediaContainer.innerHTML = `
+        <video id="signage-video" src="${currentFile}" 
+               autoplay muted playsinline
+               style="width: 100%; height: 100%; object-fit: fill; display: none;">
+        </video>
+        <img id="signage-img" src="${currentFile}" 
+             style="width: 100%; height: 100%; object-fit: fill; display: none;" 
+             alt="Signage Media">`;
+    
+    const videoEl = document.getElementById('signage-video');
+    const imgEl = document.getElementById('signage-img');
 
-    } else {
-        mediaContainer.innerHTML = `
-            <img src="${currentFile}" 
-                 style="width: 100%; height: 100%; object-fit: fill;" 
-                 alt="Signage Media"
-                 onerror="this.src='default-bg.jpg'">`;
-        
+    // ทริก: ลองโหลดเป็นรูปภาพก่อน ถ้าพังแสดงว่าเป็นวิดีโอ
+    imgEl.onload = () => {
+        imgEl.style.display = "block";
+        videoEl.remove();
         imageTimer = setTimeout(() => {
             currentMediaIndex++;
             playCurrentMedia();
         }, IMAGE_DURATION);
-    }
+    };
+
+    imgEl.onerror = () => {
+        imgEl.remove();
+        videoEl.style.display = "block";
+        videoEl.play().catch(e => {
+            // ถ้าเล่นไม่ได้ ให้ข้ามไปไฟล์ถัดไป
+            currentMediaIndex++;
+            playCurrentMedia();
+        });
+    };
+
+    videoEl.onended = () => {
+        currentMediaIndex++;
+        playCurrentMedia();
+    };
 }
 
 let autoFetchInterval = null;
+
+// ดึงภาพจาก Drive ทันทีที่เปิดหน้าเว็บ
+fetchMediaFromDrive();
+
+// ตั้งเวลาดึงภาพจาก Drive อัปเดตใหม่ทุกๆ 5 นาที (เผื่อโยนไฟล์ใหม่เข้าไป)
+setInterval(fetchMediaFromDrive, 300000); 
 
 onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
     if (docSnap.exists()) {
@@ -180,7 +205,6 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
                 const d = config.updatedAt.toDate();
                 const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
                 const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                // เอา " น." ออกจากบรรทัดนี้ด้วยเช่นกัน
                 manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): วันที่ ${dateStr} เวลา ${timeStr}`;
             } else {
                 manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): -`;
@@ -189,10 +213,7 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
             updateTextData(manualConfig);
         }
 
-        managePlaylist(config.mediaUrl);
-
     } else {
-        console.log("ยังไม่มีข้อมูลตั้งค่าสำหรับสาขาที่: " + branchId);
-        document.getElementById('marquee-text').innerText = "รอการตั้งค่าจากแอดมินสำหรับสาขา " + branchId;
+        document.getElementById('marquee-text').innerText = "รอการตั้งค่าตัววิ่งจากแอดมินสำหรับสาขา " + branchId;
     }
 });
