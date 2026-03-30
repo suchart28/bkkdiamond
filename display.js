@@ -22,35 +22,25 @@ let currentMediaIndex = 0;
 let imageTimer = null;
 const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาที
 
-// ฟังก์ชันดึงราคาจากเว็บสมาคมค้าทองคำ (แก้ไข ID และป้องกัน Cache)
+// ฟังก์ชันดึงราคาจาก API สมาคมค้าทองคำ (เสถียร ไม่โดนบล็อก)
 async function fetchGoldTradersPrice() {
     try {
-        const targetUrl = 'https://www.goldtraders.or.th/';
-        // ใส่ timestamp เพื่อบังคับให้ Proxy ดึงข้อมูลใหม่ ไม่ใช้ของเดิมที่ค้างในระบบ
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&t=${new Date().getTime()}`;
-        
-        const response = await fetch(proxyUrl);
+        const response = await fetch('https://api.chnwt.dev/thai-gold-api/latest');
         const data = await response.json();
         
-        if (!data.contents) throw new Error("ไม่มีข้อมูลส่งกลับมาจาก Proxy");
+        if (data.status !== "success") throw new Error("ไม่สามารถดึงข้อมูลจาก API ได้");
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        
-        // ใช้ ID ที่ถูกต้องเป๊ะๆ ของเว็บสมาคมค้าทองคำ
-        const bBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblBLBuy')?.innerText || "-";
-        const bSell = doc.getElementById('DetailPlace_uc_goldprices1_lblBLSell')?.innerText || "-";
-        const oBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblOMBuy')?.innerText || "-";
-        const oSell = doc.getElementById('DetailPlace_uc_goldprices1_lblOMSell')?.innerText || "-";
+        const prices = data.response.price;
 
+        // ดึงราคาและตัด .00 ออกเพื่อให้ตัวเลขดูสวยงามขึ้น (ถ้ารับซื้อรูปพรรณมีเศษสตางค์จะคงไว้)
         return {
-            barBuy: bBuy.trim(),
-            barSell: bSell.trim(),
-            ornamentBuy: oBuy.trim(),
-            ornamentSell: oSell.trim()
+            barBuy: prices.gold_bar.buy.replace('.00', ''),
+            barSell: prices.gold_bar.sell.replace('.00', ''),
+            ornamentBuy: prices.gold.buy.replace('.00', ''),
+            ornamentSell: prices.gold.sell.replace('.00', '')
         };
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการดึงราคาจากสมาคมค้าทองคำ:", error);
+        console.error("เกิดข้อผิดพลาดในการดึงราคาจาก API:", error);
         return null; 
     }
 }
@@ -138,7 +128,7 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
         if (config.isAutoMode) {
-            // ดึงราคาสมาคมค้าทองคำทันทีที่โหลด
+            // ดึงราคา API ทันทีที่โหลด
             const goldPrice = await fetchGoldTradersPrice();
             if (goldPrice && goldPrice.barBuy !== "-") {
                 updateTextData({ ...config, ...goldPrice }); 
