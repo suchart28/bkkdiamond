@@ -1,96 +1,97 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control - Digital Signage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background-color: #fff; width: 100%; max-width: 600px; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #6d1b22; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 500; margin-bottom: 8px; color: #555; }
+        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Kanit', sans-serif; font-size: 16px; box-sizing: border-box; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { width: 100%; background-color: #6d1b22; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 18px; font-family: 'Kanit', sans-serif; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #a82a35; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        hr { border: 0; height: 1px; background: #eee; margin: 25px 0; }
+        .manual-box { background-color: #fcfcfc; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
-// ใส่ Config ของคุณ (ไม่ต้องใช้ Storage แล้ว)
-const firebaseConfig = {
-  apiKey: "AIzaSyDMMwciq6QoLSaWK6xfdr0U3ynyahtoaSk",
-  authDomain: "studio-a33fe.firebaseapp.com",
-  databaseURL: "https://studio-a33fe-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "studio-a33fe",
-  messagingSenderId: "753539109404",
-  appId: "1:753539109404:web:0d5b9f468294dacce645d9",
-  measurementId: "G-WSYVYGNGCZ"
-};
+    <div class="container">
+        <div id="login-section">
+            <h2>เข้าสู่ระบบผู้ดูแล (Admin)</h2>
+            <div class="form-group">
+                <label for="password">รหัสผ่าน</label>
+                <input type="password" id="password" placeholder="กรุณาใส่รหัสผ่าน">
+            </div>
+            <button onclick="checkLogin()">เข้าสู่ระบบ</button>
+        </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        <div id="admin-section" style="display: none;">
+            <h2>แผงควบคุม Digital Signage</h2>
+            
+            <div class="form-group">
+                <label for="branch-select">📌 เลือกสาขาที่ต้องการตั้งค่า</label>
+                <select id="branch-select">
+                    <option value="1">สาขาที่ 1</option>
+                    <option value="2">สาขาที่ 2</option>
+                    <option value="3">สาขาที่ 3</option>
+                    <option value="4">สาขาที่ 4</option>
+                    <option value="5">สาขาที่ 5</option>
+                    <option value="6">สาขาที่ 6</option>
+                    <option value="7">สาขาที่ 7</option>
+                    <option value="8">สาขาที่ 8</option>
+                    <option value="9">สาขาที่ 9</option>
+                    <option value="10">สาขาที่ 10</option>
+                </select>
+            </div>
 
-window.checkLogin = function() {
-    const pass = document.getElementById('password').value;
-    if (pass === "987654321") {
-        document.getElementById('login-section').style.display = "none";
-        document.getElementById('admin-section').style.display = "block";
-        loadCurrentSettings();
-    } else {
-        alert("รหัสผ่านไม่ถูกต้อง");
-    }
-};
+            <hr>
 
-window.toggleMode = function() {
-    const mode = document.getElementById('mode-select').value;
-    document.getElementById('manual-inputs').style.display = (mode === 'manual') ? 'block' : 'none';
-};
+            <div class="form-group">
+                <label for="mode-select">⚙️ โหมดราคาทอง</label>
+                <select id="mode-select" onchange="toggleMode()">
+                    <option value="auto">ดึงราคาอัตโนมัติ (ฮั่วเซ่งเฮง)</option>
+                    <option value="manual">กำหนดราคาเอง (Manual)</option>
+                </select>
+            </div>
 
-window.saveSettings = async function() {
-    const branchId = document.getElementById('branch-select').value;
-    const mode = document.getElementById('mode-select').value;
-    const isAutoMode = (mode === 'auto');
-    const marqueeText = document.getElementById('marquee-input').value;
-    const mediaInput = document.getElementById('media-input').value; // รับค่าชื่อไฟล์
-    const saveBtn = document.getElementById('save-btn');
-    
-    saveBtn.innerText = "กำลังบันทึกข้อมูล...";
-    saveBtn.disabled = true;
+            <div id="manual-inputs" class="manual-box" style="display: none;">
+                <h4 style="margin-top: 0; color: #6d1b22;">ราคาทองคำแท่ง 96.5%</h4>
+                <div class="grid-2">
+                    <div><label>รับซื้อ (บาท)</label><input type="number" id="bar-buy-input"></div>
+                    <div><label>ขายออก (บาท)</label><input type="number" id="bar-sell-input"></div>
+                </div>
+                <h4 style="color: #6d1b22; margin-top: 15px;">ราคาทองรูปพรรณ 96.5%</h4>
+                <div class="grid-2">
+                    <div><label>รับซื้อ (บาท)</label><input type="number" id="orn-buy-input"></div>
+                    <div><label>ขายออก (บาท)</label><input type="number" id="orn-sell-input"></div>
+                </div>
+            </div>
 
-    try {
-        const dataToSave = {
-            isAutoMode: isAutoMode,
-            marquee: marqueeText,
-            mediaUrl: mediaInput, // บันทึกชื่อไฟล์หรือ URL ตรงๆ ลง Firestore
-            updatedAt: new Date()
-        };
+            <hr>
 
-        if (!isAutoMode) {
-            dataToSave.barBuy = document.getElementById('bar-buy-input').value;
-            dataToSave.barSell = document.getElementById('bar-sell-input').value;
-            dataToSave.ornamentBuy = document.getElementById('orn-buy-input').value;
-            dataToSave.ornamentSell = document.getElementById('orn-sell-input').value;
-        }
+            <div class="form-group">
+                <label for="media-input">🎞️ ลำดับคิวไฟล์สื่อ (เล่นวนลูป)</label>
+                <span style="font-size: 13px; color: #d32f2f; font-weight: 500;">*ใส่ชื่อไฟล์หลายๆ ไฟล์ โดยใช้ลูกน้ำ ( , ) คั่น</span><br>
+                <span style="font-size: 12px; color: #888;">เช่น: banner1.jpg, video.mp4, promo2.jpg</span>
+                <input type="text" id="media-input" placeholder="พิมพ์ชื่อไฟล์ที่นี่..." style="margin-top: 8px;">
+            </div>
 
-        await setDoc(doc(db, "branches", branchId), dataToSave, { merge: true });
-        alert(`บันทึกข้อมูลสาขา ${branchId} เรียบร้อยแล้ว!`);
-        
-    } catch (error) {
-        console.error("Error: ", error);
-        alert("เกิดข้อผิดพลาด: " + error.message);
-    } finally {
-        saveBtn.innerText = "บันทึกและอัปเดตหน้าจอ";
-        saveBtn.disabled = false;
-    }
-};
+            <div class="form-group">
+                <label for="marquee-input">📢 ข้อความตัววิ่งด้านล่าง</label>
+                <input type="text" id="marquee-input" placeholder="พิมพ์ข้อความที่นี่...">
+            </div>
 
-window.loadCurrentSettings = async function() {
-    const branchId = document.getElementById('branch-select').value;
-    const docSnap = await getDoc(doc(db, "branches", branchId));
+            <button id="save-btn" onclick="saveSettings()">บันทึกและอัปเดตหน้าจอ</button>
+        </div>
+    </div>
 
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        document.getElementById('mode-select').value = data.isAutoMode ? "auto" : "manual";
-        window.toggleMode();
-        
-        document.getElementById('marquee-input').value = data.marquee || "";
-        document.getElementById('media-input').value = data.mediaUrl || ""; // โหลดชื่อไฟล์กลับมาแสดง
-        
-        if (!data.isAutoMode) {
-            document.getElementById('bar-buy-input').value = data.barBuy || "";
-            document.getElementById('bar-sell-input').value = data.barSell || "";
-            document.getElementById('orn-buy-input').value = data.ornamentBuy || "";
-            document.getElementById('orn-sell-input').value = data.ornamentSell || "";
-        }
-    } else {
-        document.getElementById('marquee-input').value = "";
-        document.getElementById('media-input').value = "";
-    }
-}
-
-document.getElementById('branch-select').addEventListener('change', loadCurrentSettings);
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
