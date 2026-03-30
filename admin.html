@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control - Digital Signage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background-color: #fff; width: 100%; max-width: 600px; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #6d1b22; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 500; margin-bottom: 8px; color: #555; }
+        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Kanit', sans-serif; font-size: 16px; box-sizing: border-box; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { width: 100%; background-color: #6d1b22; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 18px; font-family: 'Kanit', sans-serif; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #a82a35; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        hr { border: 0; height: 1px; background: #eee; margin: 25px 0; }
+        .manual-box { background-color: #fcfcfc; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-section">
+            <h2>เข้าสู่ระบบผู้ดูแล (Admin)</h2>
+            <div class="form-group">
+                <label for="password">รหัสผ่าน</label>
+                <input type="password" id="password" placeholder="กรุณาใส่รหัสผ่าน">
+            </div>
+            <button onclick="checkLogin()">เข้าสู่ระบบ</button>
+        </div>
+
+        <div id="admin-section" style="display: none;">
+            <h2>แผงควบคุม Digital Signage</h2>
+            
+            <div class="form-group">
+                <label for="branch-select">📌 เลือกสาขาที่ต้องการตั้งค่า</label>
+                <select id="branch-select">
+                    <option value="1">สาขาที่ 1</option>
+                    <option value="2">สาขาที่ 2</option>
+                    <option value="3">สาขาที่ 3</option>
+                    <option value="4">สาขาที่ 4</option>
+                    <option value="5">สาขาที่ 5</option>
+                    <option value="6">สาขาที่ 6</option>
+                    <option value="7">สาขาที่ 7</option>
+                    <option value="8">สาขาที่ 8</option>
+                    <option value="9">สาขาที่ 9</option>
+                    <option value="10">สาขาที่ 10</option>
+                </select>
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="mode-select">⚙️ โหมดราคาทอง</label>
+                <select id="mode-select" onchange="toggleMode()">
+                    <option value="auto">ดึงราคาอัตโนมัติ (ฮั่วเซ่งเฮง)</option>
+                    <option value="manual">กำหนดราคาเอง (Manual)</option>
+                </select>
+            </div>
+
+            <div id="manual-inputs" class="manual-box" style="display: none;">
+                <h4 style="margin-top: 0; color: #6d1b22;">ราคาทองคำแท่ง 96.5%</h4>
+                <div class="grid-2">
+                    <div><label>รับซื้อ (บาท)</label><input type="number" id="bar-buy-input"></div>
+                    <div><label>ขายออก (บาท)</label><input type="number" id="bar-sell-input"></div>
+                </div>
+                <h4 style="color: #6d1b22; margin-top: 15px;">ราคาทองรูปพรรณ 96.5%</h4>
+                <div class="grid-2">
+                    <div><label>รับซื้อ (บาท)</label><input type="number" id="orn-buy-input"></div>
+                    <div><label>ขายออก (บาท)</label><input type="number" id="orn-sell-input"></div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="media-input">🖼️ ชื่อไฟล์สื่อ (รูปภาพ / วิดีโอ)</label>
+                <span style="font-size: 12px; color: #888;">*พิมพ์ชื่อไฟล์ที่มีอยู่ใน GitHub (เช่น promo.jpg, video.mp4) หรือแปะลิงก์รูปจากเว็บอื่นก็ได้</span>
+                <input type="text" id="media-input" placeholder="เช่น banner-01.jpg">
+            </div>
+
+            <div class="form-group">
+                <label for="marquee-input">📢 ข้อความตัววิ่งด้านล่าง</label>
+                <input type="text" id="marquee-input" placeholder="พิมพ์ข้อความที่นี่...">
+            </div>
+
+            <button id="save-btn" onclick="saveSettings()">บันทึกและอัปเดตหน้าจอ</button>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
