@@ -22,24 +22,26 @@ let currentMediaIndex = 0;
 let imageTimer = null;
 const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาที
 
-// ฟังก์ชันดึงราคาจากเว็บสมาคมค้าทองคำ (Web Scraping)
+// ฟังก์ชันดึงราคาจากเว็บสมาคมค้าทองคำ (แก้ไข ID และป้องกัน Cache)
 async function fetchGoldTradersPrice() {
     try {
         const targetUrl = 'https://www.goldtraders.or.th/';
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        // ใส่ timestamp เพื่อบังคับให้ Proxy ดึงข้อมูลใหม่ ไม่ใช้ของเดิมที่ค้างในระบบ
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&t=${new Date().getTime()}`;
         
         const response = await fetch(proxyUrl);
         const data = await response.json();
         
-        // แปลง HTML String ที่ดึงมาได้ เป็น Document object เพื่อค้นหาข้อมูล
+        if (!data.contents) throw new Error("ไม่มีข้อมูลส่งกลับมาจาก Proxy");
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(data.contents, 'text/html');
         
-        // เจาะดึงข้อมูลตาม ID ของเว็บสมาคมค้าทองคำโดยตรง
-        const bBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblTarBuy')?.innerText || "-";
-        const bSell = doc.getElementById('DetailPlace_uc_goldprices1_lblTarSell')?.innerText || "-";
-        const oBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblGoldBuy')?.innerText || "-";
-        const oSell = doc.getElementById('DetailPlace_uc_goldprices1_lblGoldSell')?.innerText || "-";
+        // ใช้ ID ที่ถูกต้องเป๊ะๆ ของเว็บสมาคมค้าทองคำ
+        const bBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblBLBuy')?.innerText || "-";
+        const bSell = doc.getElementById('DetailPlace_uc_goldprices1_lblBLSell')?.innerText || "-";
+        const oBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblOMBuy')?.innerText || "-";
+        const oSell = doc.getElementById('DetailPlace_uc_goldprices1_lblOMSell')?.innerText || "-";
 
         return {
             barBuy: bBuy.trim(),
@@ -136,20 +138,21 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
         if (config.isAutoMode) {
-            // เรียกใช้ฟังก์ชันดึงราคาสมาคมค้าทองคำ
+            // ดึงราคาสมาคมค้าทองคำทันทีที่โหลด
             const goldPrice = await fetchGoldTradersPrice();
-            if (goldPrice) {
+            if (goldPrice && goldPrice.barBuy !== "-") {
                 updateTextData({ ...config, ...goldPrice }); 
             } else {
                 updateTextData(config); 
             }
 
+            // ตั้งเวลารีเฟรชราคาใหม่ทุกๆ 1 นาที
             autoFetchInterval = setInterval(async () => {
                 const freshPrice = await fetchGoldTradersPrice();
-                if (freshPrice) {
+                if (freshPrice && freshPrice.barBuy !== "-") {
                     updateTextData(freshPrice);
                 }
-            }, 60000); // รีเฟรชราคาใหม่ทุกๆ 1 นาที
+            }, 60000);
 
         } else {
             updateTextData(config);
