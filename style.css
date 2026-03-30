@@ -1,3 +1,4 @@
+/* รีเซ็ตค่าเริ่มต้น */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -14,34 +15,42 @@ body {
     overflow: hidden;
 }
 
+/* จัดกลุ่มซ้าย-ขวา */
+.main-content {
+    display: flex;
+    flex-direction: row;
+    height: 90vh; /* ใช้พื้นที่ 90% ของความสูงจอ */
+    width: 100%;
+}
+
 /* ==================================
-   ส่วนที่ 1: ราคาทอง (ด้านบน) 
+   ส่วนที่ 1: ราคาทอง (ด้านซ้าย) 
    ================================== */
 .price-section {
-    height: 38vh; /* ขยายเพิ่มเล็กน้อยเพื่อใส่เวลาอัพเดท */
+    width: 40%; /* ใช้พื้นที่ความกว้าง 40% */
     background: linear-gradient(135deg, #6d1b22 0%, #a82a35 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 0 4vw;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    padding: 0 3vw;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
     z-index: 10;
 }
 
 .header-title {
     text-align: center;
-    font-size: 3.5vh;
+    font-size: 3.5vw;
     font-weight: 700;
     color: #ffd700;
-    margin-bottom: 1.5vh;
+    margin-bottom: 3vh;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 .gold-type-title {
-    font-size: 2.5vh;
+    font-size: 2vw;
     font-weight: 500;
     color: #ffffff;
-    margin-bottom: 0.5vh;
+    margin-bottom: 1vh;
     border-left: 4px solid #ffd700;
     padding-left: 1vw;
 }
@@ -49,26 +58,26 @@ body {
 .price-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2vw;
-    margin-bottom: 1.5vh;
+    gap: 1.5vw;
+    margin-bottom: 3vh;
 }
 
 .price-box {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 215, 0, 0.3);
     border-radius: 8px;
-    padding: 1vh;
+    padding: 1.5vh;
     text-align: center;
 }
 
 .price-label {
-    font-size: 1.8vh;
+    font-size: 1.2vw;
     color: #f1f1f1;
     margin-bottom: 0.5vh;
 }
 
 .price-value {
-    font-size: 3.5vh;
+    font-size: 2.5vw;
     font-weight: 600;
     color: #00ff66;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
@@ -78,21 +87,19 @@ body {
     color: #ff3333;
 }
 
-/* ตั้งค่ากล่องเวลาอัพเดท */
 .update-time {
     text-align: center;
-    font-size: 1.8vh;
+    font-size: 1vw;
     color: #e0e0e0;
     font-weight: 300;
-    margin-top: 0.5vh;
+    margin-top: 1vh;
 }
 
 /* ==================================
-   ส่วนที่ 2: สื่อโฆษณา (ตรงกลาง) 
+   ส่วนที่ 2: สื่อโฆษณา (ด้านขวา) 
    ================================== */
 .media-section {
-    height: 55vh; /* ปรับลดลงให้สมดุลกับกรอบราคาที่ใหญ่ขึ้น */
-    width: 100%;
+    width: 60%; /* ใช้พื้นที่ความกว้าง 60% */
     background-color: #111;
     position: relative;
     display: flex;
@@ -111,12 +118,12 @@ body {
    ส่วนที่ 3: ข้อความตัววิ่ง (ด้านล่าง) 
    ================================== */
 .marquee-section {
-    height: 7vh;
+    height: 10vh; /* ใช้พื้นที่ 10% ของความสูงจอ */
     background: linear-gradient(to bottom, #d4af37, #aa8222);
     color: #4a0000;
     display: flex;
     align-items: center;
-    font-size: 3vh;
+    font-size: 4vh;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
