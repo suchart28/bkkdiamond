@@ -17,44 +17,42 @@ const db = getFirestore(app);
 const urlParams = new URLSearchParams(window.location.search);
 const branchId = urlParams.get('branch') || '1';
 
-// ตัวแปรสำหรับระบบ Playlist
 let currentPlaylist = [];
 let currentMediaIndex = 0;
 let imageTimer = null;
-const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ (มิลลิวินาที) -> 10000 = 10 วินาที
+const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาที
 
-// ฟังก์ชันดึงราคาทองแบบอัตโนมัติผ่าน AllOrigins Proxy
-async function fetchHuaSengHengPrice() {
+// ฟังก์ชันดึงราคาจากเว็บสมาคมค้าทองคำ (Web Scraping)
+async function fetchGoldTradersPrice() {
     try {
-        const targetUrl = 'https://online965.huasengheng.com/webprice965/';
+        const targetUrl = 'https://www.goldtraders.or.th/';
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
         
         const response = await fetch(proxyUrl);
         const data = await response.json();
         
-        const hshData = JSON.parse(data.contents);
-        const bBuy = hshData.Buy || "-";
-        const bSell = hshData.Sell || "-";
+        // แปลง HTML String ที่ดึงมาได้ เป็น Document object เพื่อค้นหาข้อมูล
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
         
-        const bBuyNum = parseInt(bBuy.replace(/,/g, ''));
-        const bSellNum = parseInt(bSell.replace(/,/g, ''));
-        
-        const oBuy = bBuyNum ? (bBuyNum - 100).toLocaleString() : "-"; 
-        const oSell = bSellNum ? (bSellNum + 500).toLocaleString() : "-";
+        // เจาะดึงข้อมูลตาม ID ของเว็บสมาคมค้าทองคำโดยตรง
+        const bBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblTarBuy')?.innerText || "-";
+        const bSell = doc.getElementById('DetailPlace_uc_goldprices1_lblTarSell')?.innerText || "-";
+        const oBuy = doc.getElementById('DetailPlace_uc_goldprices1_lblGoldBuy')?.innerText || "-";
+        const oSell = doc.getElementById('DetailPlace_uc_goldprices1_lblGoldSell')?.innerText || "-";
 
         return {
-            barBuy: bBuy,
-            barSell: bSell,
-            ornamentBuy: oBuy,
-            ornamentSell: oSell
+            barBuy: bBuy.trim(),
+            barSell: bSell.trim(),
+            ornamentBuy: oBuy.trim(),
+            ornamentSell: oSell.trim()
         };
     } catch (error) {
-        console.error("เกิดข้อผิดพลาดในการดึงราคาอัตโนมัติ:", error);
+        console.error("เกิดข้อผิดพลาดในการดึงราคาจากสมาคมค้าทองคำ:", error);
         return null; 
     }
 }
 
-// ฟังก์ชันอัปเดตข้อมูล Text และราคา
 function updateTextData(data) {
     if(data.barBuy !== undefined) document.getElementById('bar-buy').innerText = data.barBuy;
     if(data.barSell !== undefined) document.getElementById('bar-sell').innerText = data.barSell;
@@ -66,7 +64,6 @@ function updateTextData(data) {
     }
 }
 
-// ระบบจัดการคิว Playlist
 function managePlaylist(mediaUrlString) {
     if (!mediaUrlString || mediaUrlString.trim() === "") {
         currentPlaylist = [];
@@ -75,10 +72,8 @@ function managePlaylist(mediaUrlString) {
         return;
     }
 
-    // แยกชื่อไฟล์ด้วยลูกน้ำ (,) และลบช่องว่างส่วนเกิน
     const newPlaylist = mediaUrlString.split(',').map(item => item.trim()).filter(item => item !== "");
 
-    // เช็กว่าถ้าคิวมีการเปลี่ยนแปลง ค่อยรีเซ็ตแล้วเล่นใหม่ (ป้องกันจอโหลดใหม่ตอนราคาอัปเดต)
     if (JSON.stringify(newPlaylist) !== JSON.stringify(currentPlaylist)) {
         currentPlaylist = newPlaylist;
         currentMediaIndex = 0;
@@ -86,14 +81,11 @@ function managePlaylist(mediaUrlString) {
     }
 }
 
-// ฟังก์ชันเล่นไฟล์สื่อปัจจุบัน
 function playCurrentMedia() {
     if (currentPlaylist.length === 0) return;
     
-    // ล้าง Timer รูปภาพเก่าออกก่อน
     clearTimeout(imageTimer);
 
-    // ถ้าเล่นจบครบทุกไฟล์แล้ว ให้วนกลับไปไฟล์แรก
     if (currentMediaIndex >= currentPlaylist.length) {
         currentMediaIndex = 0; 
     }
@@ -103,7 +95,6 @@ function playCurrentMedia() {
     const urlStr = currentFile.toLowerCase();
 
     if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm')) {
-        // เป็นไฟล์วิดีโอ
         mediaContainer.innerHTML = `
             <video id="signage-video" src="${currentFile}" 
                    autoplay muted playsinline
@@ -112,27 +103,23 @@ function playCurrentMedia() {
         
         const videoEl = document.getElementById('signage-video');
         
-        // เมื่อวิดีโอเล่นจบ ให้เปลี่ยนไปไฟล์ถัดไป
         videoEl.onended = () => {
             currentMediaIndex++;
             playCurrentMedia();
         };
         
-        // กรณีวิดีโอมีปัญหา (ไฟล์หาย) ให้ข้ามไปไฟล์ถัดไปเลย
         videoEl.onerror = () => {
             currentMediaIndex++;
             playCurrentMedia();
         };
 
     } else {
-        // เป็นไฟล์รูปภาพ
         mediaContainer.innerHTML = `
             <img src="${currentFile}" 
                  style="width: 100%; height: 100%; object-fit: fill;" 
                  alt="Signage Media"
                  onerror="this.src='default-bg.jpg'">`;
         
-        // นับเวลา 10 วินาที แล้วเปลี่ยนไปไฟล์ถัดไป
         imageTimer = setTimeout(() => {
             currentMediaIndex++;
             playCurrentMedia();
@@ -142,34 +129,32 @@ function playCurrentMedia() {
 
 let autoFetchInterval = null;
 
-// ดักฟังการเปลี่ยนแปลงจาก Firebase Firestore แบบ Real-time
 onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
     if (docSnap.exists()) {
         const config = docSnap.data();
         
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
-        // จัดการดึงราคา
         if (config.isAutoMode) {
-            const hshPrice = await fetchHuaSengHengPrice();
-            if (hshPrice) {
-                updateTextData({ ...config, ...hshPrice }); 
+            // เรียกใช้ฟังก์ชันดึงราคาสมาคมค้าทองคำ
+            const goldPrice = await fetchGoldTradersPrice();
+            if (goldPrice) {
+                updateTextData({ ...config, ...goldPrice }); 
             } else {
                 updateTextData(config); 
             }
 
             autoFetchInterval = setInterval(async () => {
-                const freshPrice = await fetchHuaSengHengPrice();
+                const freshPrice = await fetchGoldTradersPrice();
                 if (freshPrice) {
                     updateTextData(freshPrice);
                 }
-            }, 60000);
+            }, 60000); // รีเฟรชราคาใหม่ทุกๆ 1 นาที
 
         } else {
             updateTextData(config);
         }
 
-        // จัดการอัปเดตคิว Playlist ให้กับหน้าจอ
         managePlaylist(config.mediaUrl);
 
     } else {
