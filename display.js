@@ -20,18 +20,23 @@ const db = getFirestore(app);
 const urlParams = new URLSearchParams(window.location.search);
 const branchId = urlParams.get('branch') || '1'; // ถ้าไม่ระบุให้ถือเป็นสาขา 1
 
-// ฟังก์ชันดึงราคาทองแบบอัตโนมัติ (ผ่าน Proxy ป้องกัน CORS บนเบราว์เซอร์)
+// ฟังก์ชันดึงราคาทองแบบอัตโนมัติ (แก้ไขปัญหา Proxy บล็อก)
 async function fetchHuaSengHengPrice() {
     try {
-        const response = await fetch('https://corsproxy.io/?https://online965.huasengheng.com/webprice965/');
+        // ใช้ Proxy ของ AllOrigins ซึ่งมีความเสถียรมากกว่าสำหรับ GitHub Pages
+        const targetUrl = 'https://online965.huasengheng.com/webprice965/';
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+        
+        const response = await fetch(proxyUrl);
         const data = await response.json();
         
-        // เช็กโครงสร้างข้อมูล API และแปลงเป็นตัวเลขมีลูกน้ำ
-        const bBuy = data.Buy || "-";
-        const bSell = data.Sell || "-";
+        // AllOrigins จะคืนค่ามาเป็น String ในตัวแปร contents เราต้องแปลงเป็น JSON อีกรอบ
+        const hshData = JSON.parse(data.contents);
         
-        // ตัวอย่างการคำนวณรูปพรรณ (ฮั่วเซ่งเฮงอาจไม่ได้ส่งมาตรงๆ ต้องคำนวณจากแท่ง)
-        // **คุณสามารถปรับสูตรการบวกลบราคาได้ตามต้องการ**
+        const bBuy = hshData.Buy || "-";
+        const bSell = hshData.Sell || "-";
+        
+        // คำนวณราคาทองรูปพรรณ (ซื้อเข้า -100, ขายออก +500)
         const bBuyNum = parseInt(bBuy.replace(/,/g, ''));
         const bSellNum = parseInt(bSell.replace(/,/g, ''));
         
@@ -46,7 +51,7 @@ async function fetchHuaSengHengPrice() {
         };
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงราคาอัตโนมัติ:", error);
-        return null; // ถ้าดึงไม่สำเร็จ จะคงค่าเดิมไว้
+        return null; 
     }
 }
 
