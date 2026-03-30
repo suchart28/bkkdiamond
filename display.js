@@ -20,18 +20,16 @@ const branchId = urlParams.get('branch') || '1';
 let currentPlaylist = [];
 let currentMediaIndex = 0;
 let imageTimer = null;
-const IMAGE_DURATION = 10000; // เวลาแสดงรูปภาพ 10 วินาที
+const IMAGE_DURATION = 10000;
 
-// ฟังก์ชันช่วยแปลงข้อความราคา ให้เป็นตัวเลขจำนวนเต็ม (ปัดเศษ) พร้อมใส่ลูกน้ำ
 function formatToIntegerPrice(priceStr) {
     if (!priceStr) return "-";
-    // ลบลูกน้ำเดิมออกก่อนเพื่อแปลงเป็นตัวเลขคำนวณได้
     const cleanStr = priceStr.toString().replace(/,/g, '');
-    const num = Math.round(parseFloat(cleanStr)); // แปลงเป็นตัวเลขและปัดเศษทศนิยม
-    return isNaN(num) ? "-" : num.toLocaleString('en-US'); // คืนค่ากลับพร้อมลูกน้ำหลักพัน
+    const num = Math.round(parseFloat(cleanStr));
+    return isNaN(num) ? "-" : num.toLocaleString('en-US');
 }
 
-// ฟังก์ชันดึงราคาจาก API สมาคมค้าทองคำ
+// ดึงราคาและเวลาจาก API
 async function fetchGoldTradersPrice() {
     try {
         const response = await fetch('https://api.chnwt.dev/thai-gold-api/latest');
@@ -40,13 +38,15 @@ async function fetchGoldTradersPrice() {
         if (data.status !== "success") throw new Error("ไม่สามารถดึงข้อมูลจาก API ได้");
 
         const prices = data.response.price;
+        const updateDate = data.response.date;
+        const updateTime = data.response.update_time;
 
-        // นำราคาที่ได้มาผ่านฟังก์ชันตัดทศนิยมออกให้เป็นจำนวนเต็ม
         return {
             barBuy: formatToIntegerPrice(prices.gold_bar.buy),
             barSell: formatToIntegerPrice(prices.gold_bar.sell),
             ornamentBuy: formatToIntegerPrice(prices.gold.buy),
-            ornamentSell: formatToIntegerPrice(prices.gold.sell)
+            ornamentSell: formatToIntegerPrice(prices.gold.sell),
+            updateTime: `อัพเดทราคาล่าสุด: ${updateDate} เวลา ${updateTime} น.` // ข้อความเวลาอัพเดท
         };
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงราคาจาก API:", error);
@@ -54,6 +54,7 @@ async function fetchGoldTradersPrice() {
     }
 }
 
+// ฟังก์ชันอัพเดท UI บนหน้าจอ
 function updateTextData(data) {
     if(data.barBuy !== undefined) document.getElementById('bar-buy').innerText = data.barBuy;
     if(data.barSell !== undefined) document.getElementById('bar-sell').innerText = data.barSell;
@@ -63,13 +64,17 @@ function updateTextData(data) {
     if (data.marquee !== undefined) {
         document.getElementById('marquee-text').innerText = data.marquee;
     }
+
+    if (data.updateTime !== undefined) {
+        document.getElementById('update-time').innerText = data.updateTime;
+    }
 }
 
 function managePlaylist(mediaUrlString) {
     if (!mediaUrlString || mediaUrlString.trim() === "") {
         currentPlaylist = [];
         clearTimeout(imageTimer);
-        document.getElementById('media-container').innerHTML = `<img src="default-bg.jpg" style="width: 100%; height: 100%; object-fit: fill;">`;
+        document.getElementById('media-container').innerHTML = `<img src="default-bg.jpg" style="width: 100%; height: 100%; object-fit: cover;">`;
         return;
     }
 
@@ -99,7 +104,7 @@ function playCurrentMedia() {
         mediaContainer.innerHTML = `
             <video id="signage-video" src="${currentFile}" 
                    autoplay muted playsinline
-                   style="width: 100%; height: 100%; object-fit: fill;">
+                   style="width: 100%; height: 100%; object-fit: cover;">
             </video>`;
         
         const videoEl = document.getElementById('signage-video');
@@ -117,7 +122,7 @@ function playCurrentMedia() {
     } else {
         mediaContainer.innerHTML = `
             <img src="${currentFile}" 
-                 style="width: 100%; height: 100%; object-fit: fill;" 
+                 style="width: 100%; height: 100%; object-fit: cover;" 
                  alt="Signage Media"
                  onerror="this.src='default-bg.jpg'">`;
         
@@ -137,6 +142,7 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
         if (autoFetchInterval) clearInterval(autoFetchInterval);
 
         if (config.isAutoMode) {
+            // โหมดดึงอัตโนมัติ (สมาคมค้าทองคำ)
             const goldPrice = await fetchGoldTradersPrice();
             if (goldPrice && goldPrice.barBuy !== "-") {
                 updateTextData({ ...config, ...goldPrice }); 
@@ -152,12 +158,23 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
             }, 60000);
 
         } else {
-            // โหมดพิมพ์เอง (Manual) ถ้าต้องการให้บังคับเป็นจำนวนเต็มด้วย ให้เปิดใช้งานโค้ดนี้
+            // โหมดแมนนวล (ป้อนเอง)
             const manualConfig = { ...config };
             if (manualConfig.barBuy) manualConfig.barBuy = formatToIntegerPrice(manualConfig.barBuy);
             if (manualConfig.barSell) manualConfig.barSell = formatToIntegerPrice(manualConfig.barSell);
             if (manualConfig.ornamentBuy) manualConfig.ornamentBuy = formatToIntegerPrice(manualConfig.ornamentBuy);
             if (manualConfig.ornamentSell) manualConfig.ornamentSell = formatToIntegerPrice(manualConfig.ornamentSell);
+            
+            // แปลง Timestamp ที่แอดมินกดเซฟ ให้เป็นวันที่และเวลา
+            if (config.updatedAt) {
+                const d = config.updatedAt.toDate();
+                const dateStr = d.toLocaleDateString('th-TH');
+                const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): ${dateStr} เวลา ${timeStr} น.`;
+            } else {
+                manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): -`;
+            }
+
             updateTextData(manualConfig);
         }
 
