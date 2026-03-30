@@ -36,27 +36,21 @@ body {
     z-index: 10;
 }
 
-/* โลโก้ */
+/* โลโก้ (แก้ไขเพื่อจัดวางภาพ logo.png) */
 .logo-container {
     text-align: center;
-    margin-bottom: 4vh;
-}
-.logo-container img {
-    max-width: 60%;
-    height: auto;
-}
-.logo-text {
-    font-size: 2vw;
-    font-weight: 700;
-    line-height: 1.1;
-    color: #fff;
-}
-.logo-text small {
-    font-size: 0.8vw;
-    font-weight: 300;
-    letter-spacing: 1px;
+    margin-bottom: 4vh; /* เว้นระยะห่างด้านล่างของโลโก้ */
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลางแนวนอน */
+    align-items: center;     /* จัดกึ่งกลางแนวตั้ง (เผื่อพื้นที่โลโก้สูงไม่เท่ากัน) */
 }
 
+/* ตั้งค่าขนาดภาพโลโก้ main-logo */
+.main-logo {
+    max-width: 80%; /* จำกัดความกว้างไม่ให้เต็มSidebarเกินไป ปรับเพิ่ม/ลดได้ตามชอบ */
+    height: auto;    /* คงสัดส่วนภาพอัตโนมัติ */
+    display: block;  /* ป้องกันช่องว่างด้านล่างภาพ */
+}
 /* หัวข้อราคาทอง */
 .gold-title {
     font-size: 2.2vw;
