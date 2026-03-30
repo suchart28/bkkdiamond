@@ -77,7 +77,7 @@ body {
     display: flex;
     align-items: center;
     padding-left: 2vw;
-    font-size: 2.8vw; 
+    font-size: 2.0vw; 
     font-weight: 700;
 }
 
@@ -89,7 +89,7 @@ body {
     align-items: center;
     justify-content: flex-end;
     padding-right: 2vw;
-    font-size: 6.2vw; /* ขยายตัวเลขให้ใหญ่ขึ้นอีกนิด รับกับกรอบที่สูงขึ้น */
+    font-size: 6.0vw; /* ขยายตัวเลขให้ใหญ่ขึ้นอีกนิด รับกับกรอบที่สูงขึ้น */
     font-weight: 700;
     letter-spacing: 1px;
 }
