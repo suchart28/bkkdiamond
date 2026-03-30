@@ -3,47 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BKK Diamond - Display</title>
+    <title>Digital Signage - Vertical</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <div class="main-content">
+
+    <div class="price-section">
+        <div class="header-title">ราคาทองคำวันนี้</div>
         
-        <div class="left-panel">
-            <img src="logo.png" alt="BKK Diamond Logo" class="logo">
-            
-            <div class="price-title">ราคาทองคำแท่ง 96.5%</div>
+        <div class="gold-type-title">ทองคำแท่ง 96.5%</div>
+        <div class="price-grid">
             <div class="price-box">
-                <div class="price-label">รับซื้อ</div>
+                <div class="price-label">รับซื้อ (บาท)</div>
                 <div class="price-value" id="bar-buy">-</div>
             </div>
             <div class="price-box">
-                <div class="price-label">ขายออก</div>
-                <div class="price-value" id="bar-sell">-</div>
+                <div class="price-label sell-label">ขายออก (บาท)</div>
+                <div class="price-value sell-value" id="bar-sell">-</div>
             </div>
+        </div>
 
-            <div class="price-title" style="margin-top: 3vh;">ราคาทองรูปพรรณ 96.5%</div>
+        <div class="gold-type-title">ทองรูปพรรณ 96.5%</div>
+        <div class="price-grid">
             <div class="price-box">
-                <div class="price-label">รับซื้อ</div>
+                <div class="price-label">รับซื้อ (บาท)</div>
                 <div class="price-value" id="ornament-buy">-</div>
             </div>
             <div class="price-box">
-                <div class="price-label">ขายออก</div>
-                <div class="price-value" id="ornament-sell">-</div>
+                <div class="price-label sell-label">ขายออก (บาท)</div>
+                <div class="price-value sell-value" id="ornament-sell">-</div>
             </div>
         </div>
 
-        <div class="right-panel" id="media-container">
-            <img src="default-bg.jpg" alt="Default Media">
-        </div>
-
+        <div class="update-time" id="update-time">อัพเดทราคาล่าสุด: -</div>
     </div>
 
-    <div class="marquee-container">
-        <marquee id="marquee-text">กำลังโหลดข้อมูล...</marquee>
+    <div class="media-section" id="media-container">
+        <img src="default-bg.jpg" alt="Default Background">
+    </div>
+
+    <div class="marquee-section">
+        <marquee scrollamount="5" id="marquee-text">กำลังโหลดข้อมูล...</marquee>
     </div>
 
     <script type="module" src="display.js"></script>
+
 </body>
 </html>
