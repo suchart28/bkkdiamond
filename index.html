@@ -3,48 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Signage - Vertical</title>
+    <title>Digital Signage - Horizontal</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="price-section">
-        <div class="header-title">ราคาทองคำวันนี้</div>
+    <div class="main-content">
         
-        <div class="gold-type-title">ทองคำแท่ง 96.5%</div>
-        <div class="price-grid">
-            <div class="price-box">
-                <div class="price-label">รับซื้อ (บาท)</div>
-                <div class="price-value" id="bar-buy">-</div>
+        <div class="price-section">
+            <div class="header-title">ราคาทองคำวันนี้</div>
+            
+            <div class="gold-type-title">ทองคำแท่ง 96.5%</div>
+            <div class="price-grid">
+                <div class="price-box">
+                    <div class="price-label">รับซื้อ (บาท)</div>
+                    <div class="price-value" id="bar-buy">-</div>
+                </div>
+                <div class="price-box">
+                    <div class="price-label sell-label">ขายออก (บาท)</div>
+                    <div class="price-value sell-value" id="bar-sell">-</div>
+                </div>
             </div>
-            <div class="price-box">
-                <div class="price-label sell-label">ขายออก (บาท)</div>
-                <div class="price-value sell-value" id="bar-sell">-</div>
+
+            <div class="gold-type-title">ทองรูปพรรณ 96.5%</div>
+            <div class="price-grid">
+                <div class="price-box">
+                    <div class="price-label">รับซื้อ (บาท)</div>
+                    <div class="price-value" id="ornament-buy">-</div>
+                </div>
+                <div class="price-box">
+                    <div class="price-label sell-label">ขายออก (บาท)</div>
+                    <div class="price-value sell-value" id="ornament-sell">-</div>
+                </div>
             </div>
+
+            <div class="update-time" id="update-time">อัพเดทราคาล่าสุด: -</div>
         </div>
 
-        <div class="gold-type-title">ทองรูปพรรณ 96.5%</div>
-        <div class="price-grid">
-            <div class="price-box">
-                <div class="price-label">รับซื้อ (บาท)</div>
-                <div class="price-value" id="ornament-buy">-</div>
-            </div>
-            <div class="price-box">
-                <div class="price-label sell-label">ขายออก (บาท)</div>
-                <div class="price-value sell-value" id="ornament-sell">-</div>
-            </div>
+        <div class="media-section" id="media-container">
+            <img src="default-bg.jpg" alt="Default Background">
         </div>
 
-        <div class="update-time" id="update-time">อัพเดทราคาล่าสุด: -</div>
-    </div>
-
-    <div class="media-section" id="media-container">
-        <img src="default-bg.jpg" alt="Default Background">
     </div>
 
     <div class="marquee-section">
-        <marquee scrollamount="5" id="marquee-text">กำลังโหลดข้อมูล...</marquee>
+        <marquee scrollamount="6" id="marquee-text">กำลังโหลดข้อมูล...</marquee>
     </div>
 
     <script type="module" src="display.js"></script>
