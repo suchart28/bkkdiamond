@@ -39,7 +39,7 @@ async function fetchGoldTradersPrice() {
 
         const prices = data.response.price;
         
-        // แก้ปัญหา undefined โดยเช็กค่า หากไม่มีให้สร้างวันที่ไทยปัจจุบัน
+        // จัดการวันที่
         let updateDate = data.response.date;
         if (!updateDate || updateDate === "undefined") {
             const today = new Date();
@@ -51,7 +51,7 @@ async function fetchGoldTradersPrice() {
             }
         }
 
-        // ดึงเวลาอัพเดท ถ้าไม่มีให้ใช้เวลาปัจจุบัน
+        // ดึงเวลาอัพเดท (API จะมีคำว่า (ครั้งที่ X) มาให้แล้ว)
         const updateTime = data.response.update_time || new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
         return {
@@ -59,7 +59,8 @@ async function fetchGoldTradersPrice() {
             barSell: formatToIntegerPrice(prices.gold_bar.sell),
             ornamentBuy: formatToIntegerPrice(prices.gold.buy),
             ornamentSell: formatToIntegerPrice(prices.gold.sell),
-            updateTime: `อัพเดทราคาล่าสุด: วันที่ ${updateDate} เวลา ${updateTime} น.`
+            // เอา " น." ออกจากบรรทัดนี้แล้ว
+            updateTime: `อัพเดทราคาล่าสุด: วันที่ ${updateDate} เวลา ${updateTime}`
         };
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงราคาจาก API:", error);
@@ -112,7 +113,6 @@ function playCurrentMedia() {
     const mediaContainer = document.getElementById('media-container');
     const urlStr = currentFile.toLowerCase();
 
-    // บังคับ object-fit: fill ทุกกรณี
     if (urlStr.endsWith('.mp4') || urlStr.endsWith('.webm')) {
         mediaContainer.innerHTML = `
             <video id="signage-video" src="${currentFile}" 
@@ -180,7 +180,8 @@ onSnapshot(doc(db, "branches", branchId), async (docSnap) => {
                 const d = config.updatedAt.toDate();
                 const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
                 const timeStr = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): วันที่ ${dateStr} เวลา ${timeStr} น.`;
+                // เอา " น." ออกจากบรรทัดนี้ด้วยเช่นกัน
+                manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): วันที่ ${dateStr} เวลา ${timeStr}`;
             } else {
                 manualConfig.updateTime = `อัพเดทราคาล่าสุด (กำหนดเอง): -`;
             }
