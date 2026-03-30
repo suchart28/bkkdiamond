@@ -1,114 +1,127 @@
-@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
-
-body {
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body {
     font-family: 'Kanit', sans-serif;
-    background-color: #601217; /* สีพื้นหลังแดงเข้มตามรูป */
-    height: 100vh; /* สูง 100% ของหน้าจอ */
+    background-color: #000;
+    color: #fff;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* ป้องกันไม่ให้มี Scrollbar */
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* คอนเทนเนอร์หลัก (แบ่งซ้าย-ขวา) */
-.main-content {
-    display: flex;
-    flex: 1;
-    height: calc(100vh - 70px); /* ลบความสูงของแถบข้อความวิ่งด้านล่างออก */
-}
-
-/* แผงด้านซ้าย (ราคาทอง) */
-.left-panel {
-    width: 38%; /* สัดส่วนความกว้างด้านซ้าย */
-    background-color: #601217;
+/* ==================================
+   ส่วนที่ 1: ราคาทอง (ด้านบน) 
+   ================================== */
+.price-section {
+    height: 38vh; /* ขยายเพิ่มเล็กน้อยเพื่อใส่เวลาอัพเดท */
+    background: linear-gradient(135deg, #6d1b22 0%, #a82a35 100%);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center; /* ให้อยู่กึ่งกลางแนวตั้ง */
-    padding: 2vw;
-    box-sizing: border-box;
+    justify-content: center;
+    padding: 0 4vw;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    z-index: 10;
 }
 
-/* โลโก้ */
-.logo {
-    max-width: 50%;
-    margin-bottom: 2vh;
+.header-title {
+    text-align: center;
+    font-size: 3.5vh;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 1.5vh;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-/* หัวข้อราคาทอง */
-.price-title {
-    color: #fce2a3; /* สีทองอ่อน */
-    font-size: 2.2vw;
-    font-weight: 600;
-    margin: 2vh 0 1.5vh 0;
+.gold-type-title {
+    font-size: 2.5vh;
+    font-weight: 500;
+    color: #ffffff;
+    margin-bottom: 0.5vh;
+    border-left: 4px solid #ffd700;
+    padding-left: 1vw;
+}
+
+.price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2vw;
+    margin-bottom: 1.5vh;
+}
+
+.price-box {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 1vh;
     text-align: center;
 }
 
-/* กล่องราคา (รับซื้อ-ขายออก) */
-.price-box {
-    width: 90%;
-    display: flex;
-    background-color: #fff;
-    border-radius: 12px;
-    margin-bottom: 1.5vh;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+.price-label {
+    font-size: 1.8vh;
+    color: #f1f1f1;
+    margin-bottom: 0.5vh;
 }
 
-/* ป้าย รับซื้อ/ขายออก (สีทอง) */
-.price-label {
-    width: 35%;
-    background: linear-gradient(to right, #fce2a3, #d9a855);
-    color: #000;
-    font-weight: 700;
-    font-size: 1.8vw;
+.price-value {
+    font-size: 3.5vh;
+    font-weight: 600;
+    color: #00ff66;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+.sell-value {
+    color: #ff3333;
+}
+
+/* ตั้งค่ากล่องเวลาอัพเดท */
+.update-time {
+    text-align: center;
+    font-size: 1.8vh;
+    color: #e0e0e0;
+    font-weight: 300;
+    margin-top: 0.5vh;
+}
+
+/* ==================================
+   ส่วนที่ 2: สื่อโฆษณา (ตรงกลาง) 
+   ================================== */
+.media-section {
+    height: 55vh; /* ปรับลดลงให้สมดุลกับกรอบราคาที่ใหญ่ขึ้น */
+    width: 100%;
+    background-color: #111;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5vh 0;
 }
 
-/* ตัวเลขราคา (สีขาว) */
-.price-value {
-    width: 65%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end; /* ชิดขวา */
-    padding-right: 2vw;
-    font-size: 2.5vw;
-    font-weight: 700;
-    color: #000;
-}
-
-/* แผงด้านขวา (สื่อ รูป/วิดีโอ) */
-.right-panel {
-    width: 62%;
-    background-color: #000; /* พื้นหลังดำกันขอบลอย */
-    position: relative;
-}
-
-/* บังคับรูป/วิดีโอ ให้ยืดเต็มกรอบ 100% ไม่คงสัดส่วน */
-.right-panel video,
-.right-panel img {
+.media-section img, 
+.media-section video {
     width: 100%;
     height: 100%;
-    object-fit: fill; /* คำสั่งหลักที่ทำให้ยืดเต็มกรอบ */
-    position: absolute;
-    top: 0;
-    left: 0;
+    object-fit: cover;
 }
 
-/* แถบข้อความวิ่งด้านล่าง */
-.marquee-container {
-    height: 70px;
-    background-color: #c9141b; /* สีแดงสด */
-    color: #fff;
-    font-size: 35px;
-    font-weight: 500;
+/* ==================================
+   ส่วนที่ 3: ข้อความตัววิ่ง (ด้านล่าง) 
+   ================================== */
+.marquee-section {
+    height: 7vh;
+    background: linear-gradient(to bottom, #d4af37, #aa8222);
+    color: #4a0000;
     display: flex;
     align-items: center;
+    font-size: 3vh;
+    font-weight: 600;
+    white-space: nowrap;
     overflow: hidden;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    z-index: 10;
 }
 
 marquee {
