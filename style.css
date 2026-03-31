@@ -89,7 +89,7 @@ body {
     align-items: center;
     justify-content: flex-end;
     padding-right: 2vw;
-    font-size: 6.0vw; /* ขยายตัวเลขให้ใหญ่ขึ้นอีกนิด รับกับกรอบที่สูงขึ้น */
+    font-size: 5.0vw; /* ขยายตัวเลขให้ใหญ่ขึ้นอีกนิด รับกับกรอบที่สูงขึ้น */
     font-weight: 700;
     letter-spacing: 1px;
 }
@@ -97,7 +97,7 @@ body {
 /* กล่องแสดงเวลาอัพเดท */
 .update-time {
     margin-top: auto; 
-    font-size: 1.2vw; 
+    font-size: 1.0vw; 
     color: #fce4ad;
     font-weight: 300;
     text-align: center;
