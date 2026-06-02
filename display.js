@@ -40,32 +40,49 @@ function formatToIntegerPrice(priceStr) {
     return isNaN(num) ? "-" : num.toLocaleString('en-US');
 }
 
-// ฟังก์ชันดึงราคาและจัดการวันที่จาก API
+// ฟังก์ชันดึงราคาและจัดการวันที่จาก API ฮั่วเซ่งเฮง
 async function fetchGoldTradersPrice() {
     try {
-        const response = await fetch('https://api.chnwt.dev/thai-gold-api/latest');
+        const response = await fetch('https://apicheckpricev3.huasengheng.com/api/Values/GetPrice');
         const data = await response.json();
-        if (data.status !== "success") throw new Error("ไม่สามารถดึงข้อมูลจาก API ได้");
+        
+        if (!data || (Array.isArray(data) && data.length === 0)) throw new Error("ไม่สามารถดึงข้อมูลจาก API ได้");
 
-        const prices = data.response.price;
+        // ดึงข้อมูลรายการแรก (ปกติจะเป็นราคาทอง 96.5% ของฮั่วเซ่งเฮง)
+        const goldData = Array.isArray(data) ? data[0] : data;
         
-        let updateDate = data.response.date;
-        if (!updateDate || updateDate === "undefined") {
-            const today = new Date();
-            updateDate = today.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-        } else {
-            const d = new Date(updateDate);
-            if (!isNaN(d)) updateDate = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+        let barBuyPrice = goldData.Buy;
+        let barSellPrice = goldData.Sell;
+        
+        // หมายเหตุ: API ของฮั่วเซ่งเฮง (GetPrice) มักจะมีแค่ราคาทองแท่ง
+        // เบื้องต้นให้รูปพรรณใช้ค่าเดียวกับทองแท่งไปก่อน หรือปรับสูตร (เช่น +500) ได้ที่บรรทัดด้านล่าง
+        let ornamentBuyPrice = goldData.Buy; 
+        let ornamentSellPrice = goldData.Sell;
+
+        // กรณีที่ API ส่งมาเป็น Array และมีรายการของทองรูปพรรณมาให้ด้วย ก็จะนำมาทับค่าเดิม
+        if (Array.isArray(data)) {
+            const ornament = data.find(item => item.GoldType && (item.GoldType.includes('รูปพรรณ') || item.GoldType.includes('Jewelry')));
+            if (ornament) {
+                ornamentBuyPrice = ornament.Buy;
+                ornamentSellPrice = ornament.Sell;
+            }
         }
-        
-        const updateTime = data.response.update_time || new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+        // จัดการข้อความเวลาที่อัปเดต (ฮั่วเซ่งเฮงมักจะส่ง StrTimeUpdate มาให้แบบพร้อมแสดงผล)
+        let updateText = goldData.StrTimeUpdate;
+        if (!updateText) {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+            const timeStr = today.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            updateText = `อัพเดทราคาล่าสุด: วันที่ ${dateStr} เวลา ${timeStr}`;
+        }
 
         return {
-            barBuy: formatToIntegerPrice(prices.gold_bar.buy),
-            barSell: formatToIntegerPrice(prices.gold_bar.sell),
-            ornamentBuy: formatToIntegerPrice(prices.gold.buy),
-            ornamentSell: formatToIntegerPrice(prices.gold.sell),
-            updateTime: `อัพเดทราคาล่าสุด: วันที่ ${updateDate} เวลา ${updateTime}`
+            barBuy: formatToIntegerPrice(barBuyPrice),
+            barSell: formatToIntegerPrice(barSellPrice),
+            ornamentBuy: formatToIntegerPrice(ornamentBuyPrice),
+            ornamentSell: formatToIntegerPrice(ornamentSellPrice),
+            updateTime: updateText
         };
     } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงราคาจาก API:", error);
